@@ -103,3 +103,42 @@ input, textarea { caret-color: var(--accent); }
   .page-transition, .app-modal { transform: none !important; }
   .startup-indicator i { animation: none; opacity: .7; transform: none; }
 }
+
+/* Surface rims stay separate from borders used by controls and calendar grids. */
+:root {
+  --surface-rim-highlight: rgba(255, 255, 255, .92);
+  --surface-rim-lowlight: rgba(24, 32, 43, .06);
+  --surface-card-elevation: 0 2px 6px rgba(24, 32, 43, .04);
+  --surface-bevel: inset 0 1px 0 var(--surface-rim-highlight),
+    inset 0 -1px 0 var(--surface-rim-lowlight);
+}
+:root:not([data-theme="white"]) {
+  --surface-rim-highlight: rgba(255, 255, 255, .12);
+  --surface-rim-lowlight: rgba(0, 0, 0, .24);
+  --surface-card-elevation: 0 2px 6px rgba(0, 0, 0, .1);
+}
+.panel {
+  box-shadow: var(--surface-bevel), var(--surface-card-elevation);
+}
+.floating-nav {
+  box-shadow: var(--surface-bevel), 0 10px 30px rgba(0, 0, 0, .24);
+}
+.app-modal {
+  box-shadow: var(--surface-bevel), 0 24px 70px rgba(0, 0, 0, .3);
+}
+dialog.profile-editor {
+  box-shadow: var(--surface-bevel), 0 24px 70px rgba(0, 0, 0, .35);
+}
+.identity-panel {
+  position: relative;
+  box-shadow: var(--surface-card-elevation);
+}
+.identity-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  box-shadow: var(--surface-bevel);
+  pointer-events: none;
+}
