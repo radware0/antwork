@@ -2,7 +2,7 @@
 
 ## Run locally
 
-Use Node.js 22.18 or newer. In the project directory:
+Use Node.js 22.x (22.18 or newer), matching the Vercel build. In the project directory:
 
 ```sh
 npm ci
@@ -25,7 +25,11 @@ Start the development server before `test:browser`. The browser workflow uses Ch
 
 Before pushing the public GitHub repository, review staged files, confirm no secrets or personal JSON backups are present, and keep `node_modules/`, `dist/`, `.qa/`, and local implementation scratch files out of version control. The public documentation source is in `docs/`; generated HTML is not the source of truth. Registry-installed source attribution is in `THIRD_PARTY_NOTICES.md`; antwork itself has no project-wide license in this beta.
 
-Vercel deployment is a later release action, separate from the first GitHub push. When ready, use a static/Other project with `npm run build` as the build command and `dist` as the output directory. `vercel.json` records these settings. The app uses hash routes, so each app destination remains under the root page; the generated documentation is served under `/docs/`. Smoke-test Dashboard, all five dock destinations, `/docs/`, and a deeper docs page after deployment.
+The production app is [antwork-five.vercel.app](https://antwork-five.vercel.app/). The Vercel project `antwork` is connected to `radware0/antwork`; pushes to `main` build and update production automatically.
+
+The project uses the Other framework preset, the repository root, Node.js 22.x, `npm ci` for installation, `npm run build` for the build, and `dist` for output. `vercel.json` records the build settings and `package.json` pins the Node major version. No environment variables are required.
+
+The app uses hash routes, so each app destination remains under the root page; generated documentation is served under `/docs/`. After a release, verify the production deployment matches the pushed commit and smoke-test all five destinations, `/docs/`, and a deeper docs page. The browser workflow accepts `QA_BASE_URL` to test the live URL in a fresh browser context.
 
 Browser storage is tied to a site origin. History saved at localhost will not magically appear on the Vercel domain: export JSON in Profile, then import it on the deployed origin if you want that copy there. Do not publish a real backup to the repository.
 
