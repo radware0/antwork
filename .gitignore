@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.superpowers/
+.qa/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+.vercel/
