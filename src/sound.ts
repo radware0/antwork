@@ -55,13 +55,13 @@ export function primeAudio(enabled: boolean) {
 export function playInterfaceSound(enabled: boolean, force = false) {
   const at = typeof performance === 'undefined' ? Date.now() : performance.now();
   if (!enabled || (!force && !allowInterfaceSound(at))) return;
-  withRunningContext(context => tone(context, 520, 0.045, 0.036));
+  withRunningContext(context => tone(context, 520, 0.045, 0.072));
 }
 
 export function playTimerAlarm(enabled: boolean) {
   if (!enabled) return;
   withRunningContext(context => {
-    tone(context, 660, 0.16, 0.09);
-    tone(context, 880, 0.2, 0.07, 0.12);
+    tone(context, 660, 0.16, 0.18);
+    tone(context, 880, 0.2, 0.14, 0.12);
   });
 }

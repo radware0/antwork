@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { workHoursSeries } from '../chartData.ts';
+import { accessibleChartHours, workHoursSeries } from '../chartData.ts';
 import { dateKey, sessionDays, sessionDay } from '../domain.ts';
 import { Modal } from './Modal.tsx';
 import { localMinute, resolveEditedEndpoint } from '../sessionTime.ts';
@@ -178,7 +178,7 @@ export function HoursChart({ data, now, days = 7, compact = false }: { data: App
       <div aria-hidden="true">{visible ? <Suspense fallback={<div className="chart-pending" />}>
         <HoursPlot points={values} compact={compact} />
       </Suspense> : <div className="chart-pending" />}</div>
-      <ol className="sr-only">{values.map(({ day, minutes }) => <li key={day}>{displayDate(day)}: {Math.round(minutes * 100) / 100} minutes</li>)}</ol>
+      <ol className="sr-only">{values.map(({ day, hours }) => <li key={day}>{displayDate(day)}: {accessibleChartHours(hours)}</li>)}</ol>
     </div>
     {data.sessions.length === 0 && !data.timer && <p className="chart-empty">No sessions yet — start your first lock-in.</p>}
   </section>;

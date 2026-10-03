@@ -2,6 +2,8 @@
 
 The five app destinations are Dashboard, Timers, Calendar, Work Hours, and Profile. They share a bottom dock; editing uses focused dialogs rather than expanding into the reading layout.
 
+Dashboard and Work Hours charts show daily deep work in hours. Screen-reader summaries and chart tooltips use the same unit. The Timers page keeps its complete work timer panel centered at first; desktop users can reposition it with the header handle or keyboard. It stays within the free space above the dock. Phone layouts keep normal scrolling, and placement resets when antwork reloads.
+
 ## Hours, sessions, and results
 
 All saved timer sessions and manual entries count as deep work. Interval sessions use their recorded start and end timestamps and split across local midnight. Dated duration entries assign every minute to the selected date. Paused timer time is excluded. Unfinished timer time is visible as provisional progress but is not a saved session.

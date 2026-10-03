@@ -106,16 +106,19 @@ input, textarea { caret-color: var(--accent); }
 
 /* Surface rims stay separate from borders used by controls and calendar grids. */
 :root {
-  --surface-rim-highlight: rgba(255, 255, 255, .92);
-  --surface-rim-lowlight: rgba(24, 32, 43, .06);
-  --surface-card-elevation: 0 2px 6px rgba(24, 32, 43, .04);
-  --surface-bevel: inset 0 1px 0 var(--surface-rim-highlight),
-    inset 0 -1px 0 var(--surface-rim-lowlight);
+  --surface-rim-outline: rgba(24, 32, 43, .1);
+  --surface-rim-highlight: rgba(255, 255, 255, .98);
+  --surface-rim-lowlight: rgba(24, 32, 43, .17);
+  --surface-card-elevation: 0 3px 8px rgba(24, 32, 43, .07);
+  --surface-bevel: inset 0 0 0 1px var(--surface-rim-outline),
+    inset 2px 2px 0 var(--surface-rim-highlight),
+    inset -2px -2px 0 var(--surface-rim-lowlight);
 }
 :root:not([data-theme="white"]) {
-  --surface-rim-highlight: rgba(255, 255, 255, .12);
-  --surface-rim-lowlight: rgba(0, 0, 0, .24);
-  --surface-card-elevation: 0 2px 6px rgba(0, 0, 0, .1);
+  --surface-rim-outline: rgba(210, 220, 235, .18);
+  --surface-rim-highlight: rgba(255, 255, 255, .4);
+  --surface-rim-lowlight: rgba(0, 0, 0, .58);
+  --surface-card-elevation: 0 3px 8px rgba(0, 0, 0, .2);
 }
 .panel {
   box-shadow: var(--surface-bevel), var(--surface-card-elevation);

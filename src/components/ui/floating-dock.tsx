@@ -13,7 +13,7 @@ export function FloatingDock<Page extends string>({ items, active, onNavigate }:
 }) {
   const reduced = useReducedMotion();
   return <nav className="floating-nav" aria-label="Main navigation"><Dock className="antwork-dock"
-    iconSize={52} iconMagnification={56} iconDistance={100} disableMagnification={Boolean(reduced)}>{items.map(item => {
+    iconSize={52} iconMagnification={52 * 1.08} iconDistance={100} disableMagnification={Boolean(reduced)}>{items.map(item => {
     const Icon = item.icon;
     return <DockIcon className="dock-slot" key={item.page}><button type="button" className={'dock-item' + (active === item.page ? ' active' : '')}
       aria-current={active === item.page ? 'page' : undefined} onClick={() => onNavigate(item.page)} title={item.label}

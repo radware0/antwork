@@ -1,17 +1,20 @@
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { chromium } from 'playwright-core';
+import { checkDockInteractions } from './dock-checks.mjs';
+import { checkTimerInteractions } from './timer-checks.mjs';
 
 const browser = await chromium.launch({ headless: true });
-const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, acceptDownloads: true });
+const context = await browser.newContext({ storageState: { cookies: [], origins: [] }, viewport: { width: 1440, height: 900 }, acceptDownloads: true });
 const page = await context.newPage();
 await page.addInitScript(() => {
   window.qaSounds = [];
+  window.qaSoundGains = [];
   class QAAudioContext {
     state = 'running'; currentTime = 0; destination = {};
     resume() { this.state = 'running'; return Promise.resolve(); }
     createOscillator() { return { type: 'sine', frequency: { setValueAtTime: value => window.qaSounds.push(value) }, connect(node) { return node; }, start() {}, stop() {} }; }
-    createGain() { return { gain: { setValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect(node) { return node; } }; }
+    createGain() { return { gain: { setValueAtTime() {}, exponentialRampToValueAtTime(value) { if (value > .0001) window.qaSoundGains.push(value); } }, connect(node) { return node; } }; }
   }
   Object.defineProperty(window, 'AudioContext', { configurable: true, value: QAAudioContext });
 });
@@ -38,6 +41,7 @@ try {
   await page.getByRole('heading', { name: 'Dashboard', exact: true }).waitFor();
   assert.equal((await readData()).schemaVersion, 4);
   assert.equal((await readData()).theme, 'black');
+  assert.equal((await readData()).sessions.length, 0, 'workflow starts in an isolated empty browser context');
   assert.equal(await page.getByRole('radiogroup', { name: 'Theme' }).getByRole('radio').count(), 2);
   assert.deepEqual((await readData()).preferences, { interfaceSounds: true, timerAlarm: true });
   assert.equal(await page.evaluate(() => window.qaSounds.length), 0);
@@ -50,6 +54,7 @@ try {
   await nav('Calendar'); await nav('Timers'); await page.goBack();
   await page.getByRole('heading', { name: 'Calendar', exact: true }).waitFor();
   await page.goForward(); await page.getByRole('heading', { name: 'Timers', exact: true }).waitFor();
+  await checkTimerInteractions(page, { verifyReturn: true });
   await nav('Dashboard');
   await page.getByRole('button', { name: 'Start lock-in' }).click();
   await page.getByRole('button', { name: 'Open Timer' }).waitFor();
@@ -195,6 +200,7 @@ try {
 
   await nav('Work Hours');
   assert.ok(await page.evaluate(() => window.qaSounds.length > 3), 'enabled navigation sound plays');
+  assert.ok(await page.evaluate(() => window.qaSoundGains.includes(.072)), 'interface clicks use the louder gain');
   assert.equal(await page.locator('.manual-entry').count(), 0);
   await page.locator('.antwork-chart svg').first().waitFor();
   assert.equal(await page.locator('.hours-area .sr-only li').count(), 30);
@@ -270,6 +276,7 @@ try {
   await putData(countdownData);
   await page.waitForFunction(start => window.qaSounds.length >= start + 2, alarmStart);
   assert.equal(await page.evaluate(start => window.qaSounds.slice(start).filter(value => value === 660 || value === 880).length, alarmStart), 2, 'settled countdown emits one two-note alarm');
+  assert.deepEqual(await page.evaluate(() => window.qaSoundGains.filter(value => value !== .072)), [.18, .14], 'only one louder two-note alarm plays');
   await page.waitForFunction(() => document.querySelectorAll('dialog').length === 2);
   assert.equal(await page.locator('dialog[open]').count(), 1);
   assert.equal(await note.isVisible(), true);
@@ -305,9 +312,17 @@ try {
     assert.equal((await readData()).theme, theme);
     for (const [width, height] of [[1440, 900], [1366, 768], [1100, 820], [390, 844]]) {
       await page.setViewportSize({ width, height });
+      await checkDockInteractions(page);
       for (const name of ['Dashboard', 'Timers', 'Calendar', 'Work Hours', 'Profile']) {
         await nav(name); await noOverflow();
         if (name === 'Dashboard') assert.ok(await page.locator('.trend-compact .hours-area').evaluate(el => el.getBoundingClientRect().height >= 70), 'lazy Dashboard chart reserves its height');
+        if (name === 'Timers') await checkTimerInteractions(page, { draggable: width >= 900 });
+        if (name === 'Work Hours') {
+          const chartValues = await page.locator('.hours-area .sr-only li').allTextContents();
+          assert.equal(chartValues.length, 30);
+          assert.ok(chartValues.every(value => / \d+(?:\.\d+)? hours?$/.test(value)), 'accessible chart values use hours');
+          assert.ok(chartValues.every(value => !value.includes('minutes')), 'accessible chart values never say minutes');
+        }
         await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
         assert.ok(await page.evaluate(() => document.querySelector('.page-transition').getBoundingClientRect().bottom < document.querySelector('.floating-nav').getBoundingClientRect().top), 'dock clears final page content');
         await page.evaluate(() => scrollTo(0, 0));
@@ -324,11 +339,28 @@ try {
   assert.equal(await page.locator('.calendar-heading h2').innerText(), month);
   await page.getByRole('button', { name: 'Today', exact: true }).click();
   await page.emulateMedia({ reducedMotion: 'reduce' });
+  await checkDockInteractions(page, { staticIcons: true });
   await nav('Work Hours');
   await page.locator('.antwork-chart svg').first().waitFor();
   assert.equal(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches), true);
   await dock.getByRole('button', { name: 'Profile' }).hover();
   assert.equal(await dock.getByRole('button', { name: 'Profile' }).evaluate(el => getComputedStyle(el).transform), 'none');
+
+  const touchContext = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const touchPage = await touchContext.newPage();
+  touchPage.on('pageerror', error => errors.push(error.message));
+  await touchPage.goto(base, { waitUntil: 'networkidle' });
+  await touchPage.getByRole('heading', { name: 'Dashboard', exact: true }).waitFor();
+  assert.equal(await touchPage.evaluate(() => matchMedia('(hover: none)').matches), true);
+  await checkDockInteractions(touchPage, { staticIcons: true });
+  for (const name of ['Dashboard', 'Timers', 'Calendar', 'Work Hours', 'Profile']) {
+    const touchButton = touchPage.getByRole('navigation', { name: 'Main navigation' }).getByRole('button', { name, exact: true });
+    await touchButton.tap();
+    await touchPage.getByRole('heading', { name, exact: true }).waitFor();
+    if (name === 'Timers') await checkTimerInteractions(touchPage, { draggable: false });
+    assert.equal(await touchButton.locator('svg').evaluate(element => getComputedStyle(element).transform), 'none', 'touch navigation does not magnify icons');
+  }
+  await touchContext.close();
 
   await nav('Profile');
   const backup = await readData();

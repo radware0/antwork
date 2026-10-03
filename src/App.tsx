@@ -6,7 +6,7 @@ import { dailySummary, hoursLabel } from './ui.ts';
 import { useLedger } from './useLedger.ts';
 import { CalendarView, DayDetails } from './components/CalendarView.tsx';
 import { JournalView } from './components/JournalView.tsx';
-import { SessionReview, TimerStatus, TimerView } from './components/TimerView.tsx';
+import { SessionReview, TimerStatus, TimerView, type TimerPosition } from './components/TimerView.tsx';
 import { HoursChart, WorkHoursView, ManualEntry, SessionHistory } from './components/WorkHoursView.tsx';
 import { ProfileView } from './components/ProfileView.tsx';
 import { LoadingView } from './components/LoadingView.tsx';
@@ -65,6 +65,7 @@ export default function App() {
   const [page, setPage] = useState<Page>(readPage);
   const [month, setMonth] = useState<DateKey>(() => dateKey(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
   const [selectedDay, setSelectedDay] = useState<DateKey>(dateKey);
+  const [timerPosition, setTimerPosition] = useState<TimerPosition>({ x: 0, y: 0 });
   const [soundBusy, setSoundBusy] = useState(false);
   const [themeBusy, setThemeBusy] = useState(false);
   useEffect(() => {
@@ -117,7 +118,7 @@ export default function App() {
       {error && <div className="error-banner" role="alert">{error}<button aria-label="Dismiss error" onClick={clearError}><X size={16} /></button></div>}
       <motion.div key={page} initial={{ opacity: 0.65, y: reduced ? 0 : 5 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduced ? 0 : 0.18, ease: [0.23, 1, 0.32, 1] }} className="page-transition">
       {page === 'dashboard' && <Dashboard data={data} now={now} mutate={mutate} month={month} setMonth={setMonth} openCalendar={() => navigate('calendar')} openTimer={() => navigate('timers')} openProfile={() => navigate('profile')} />}
-      {page === 'timers' && <div className="page-stack timers-page"><div className="page-title"><div><h1>Timers</h1><p>Start a stopwatch or choose a countdown.</p></div></div><div className="timers-focus"><TimerView data={data} now={now} mutate={mutate} /><p className="timer-history-hint">Finished sessions and match results live in Work Hours.</p></div></div>}
+      {page === 'timers' && <div className="page-stack timers-page"><div className="page-title"><div><h1>Timers</h1><p>Start a stopwatch or choose a countdown.</p></div></div><TimerView data={data} now={now} mutate={mutate} position={timerPosition} onPositionChange={setTimerPosition} /> </div>}
       {page === 'calendar' && <div className="page-stack calendar-page"><div className="page-title"><div><h1>Calendar</h1><p>Browse each day’s deep work and notes.</p></div><ManualEntry data={data} mutate={mutate} initialDay={selectedDay} /></div><div className="calendar-page-layout bento-grid"><CalendarView mode="interactive" data={data} now={now} month={month} selectedDay={selectedDay} onMonth={nextMonth => { setMonth(nextMonth); setSelectedDay(nextMonth); }} onSelect={setSelectedDay} /><DayDetails data={data} day={selectedDay} now={now} mutate={mutate} /></div><SessionHistory data={data} mutate={mutate} day={selectedDay} title="Sessions" /></div>}
       {page === 'hours' && <WorkHoursView data={data} now={now} mutate={mutate} />}
       {page === 'profile' && <ProfileView data={data} now={now} mutate={mutate} replace={replace} />}

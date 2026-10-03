@@ -7,7 +7,7 @@ import {
   useSpring,
   useTransform,
 } from "motion/react"
-import type { MotionProps } from "motion/react"
+import type { MotionProps, MotionStyle } from "motion/react"
 
 import { cn } from "@/lib/utils"
 
@@ -107,42 +107,56 @@ const DockIcon = ({
   mouseX,
   className,
   children,
+  style,
+  onFocusCapture,
+  onBlurCapture,
+  onKeyDownCapture,
+  onPointerDownCapture,
   ...props
 }: DockIconProps) => {
   const ref = useRef<HTMLDivElement>(null)
   const defaultMouseX = useMotionValue(Infinity)
+  const keyboardFocused = useMotionValue(false)
 
-  const distanceCalc = useTransform(mouseX ?? defaultMouseX, (val: number) => {
-    const bounds = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 }
-    return val - bounds.x - bounds.width / 2
+  const active = useTransform((): number => {
+    const x = (mouseX ?? defaultMouseX).get()
+    const focused = keyboardFocused.get()
+    const bounds = ref.current?.getBoundingClientRect()
+    const hovered = bounds && Math.abs(x - bounds.x - bounds.width / 2) <= Math.min(distance, bounds.width / 2)
+    return !disableMagnification && (focused || hovered) ? 1 : 0
   })
 
-  const targetSize = disableMagnification ? size : magnification
-
-  const sizeTransform = useTransform(
-    distanceCalc,
-    [-distance, 0, distance],
-    [size, targetSize, size]
-  )
-
-  const scaleSize = useSpring(sizeTransform, {
+  const progress = useSpring(active, {
     mass: 0.1,
     stiffness: 150,
     damping: 12,
   })
-  const scale = useTransform(scaleSize, value => value / size)
+  const scale = useTransform(progress, [0, 1], [1, magnification / size])
+  const lift = useTransform(progress, value => `${-2 * value}px`)
 
   return (
     <motion.div
       ref={ref}
-      style={{ width: "100%", height: 52 }}
+      style={{ width: "100%", height: 52, ...style,
+        "--dock-icon-scale": scale, "--dock-icon-lift": lift,
+      } as MotionStyle}
       className={cn(
         "flex items-center justify-center",
         className
       )}
       {...props}
+      onFocusCapture={(event) => {
+        keyboardFocused.set(event.target instanceof HTMLElement && event.target.matches(":focus-visible"))
+        onFocusCapture?.(event)
+      }}
+      onBlurCapture={(event) => {
+        if (!(event.relatedTarget instanceof Node) || !event.currentTarget.contains(event.relatedTarget)) keyboardFocused.set(false)
+        onBlurCapture?.(event)
+      }}
+      onKeyDownCapture={(event) => { keyboardFocused.set(true); onKeyDownCapture?.(event) }}
+      onPointerDownCapture={(event) => { keyboardFocused.set(false); onPointerDownCapture?.(event) }}
     >
-      <motion.div style={{ scale }} className="dock-icon-inner">{children}</motion.div>
+      <div className="dock-icon-inner">{children}</div>
     </motion.div>
   )
 }
