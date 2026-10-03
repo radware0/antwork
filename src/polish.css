@@ -10,7 +10,6 @@
 .brand { font-size: 13px; letter-spacing: -.01em; }
 .brand-mark { width: 26px; height: 26px; font-size: 16px; }
 .app-topbar { display: flex; align-items: center; height: 52px; padding: 0 20px; border-bottom: 1px solid var(--border); background: var(--surface); }
-.topbar-theme [role="radiogroup"] { border-color: var(--border); }
 .main-content { max-width: none; padding: 20px 20px calc(112px + env(safe-area-inset-bottom, 0px)); }
 .floating-nav {
   position: fixed;
@@ -19,8 +18,8 @@
   bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
   display: block;
-  width: min(560px, calc(100vw - 24px));
-  padding: 5px;
+  width: min(316px, calc(100vw - 24px));
+  padding: 12px 18px;
   border: 1px solid var(--border);
   border-radius: 9px;
   background: var(--surface);
@@ -30,7 +29,7 @@
   display: flex;
   width: 100%;
   min-width: 0;
-  min-height: 52px;
+  min-height: 44px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -50,19 +49,39 @@
   height: auto;
   margin: 0;
   padding: 0;
-  gap: 2px;
+  gap: 12px;
   border: 0;
   background: transparent;
   box-shadow: none;
   backdrop-filter: none;
 }
-.dock-slot, .dock-icon-inner { min-width: 0; width: 100%; }
+.dock-slot { position: relative; min-width: 0; width: 100%; }
+.dock-icon { display: grid; width: 20px; height: 20px; place-items: center; pointer-events: none; }
+.dock-label { display: none; }
+.dock-tooltip { position: absolute; left: 50%; bottom: calc(100% + 20px); transform: translateX(-50%); padding: 6px 9px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font-size: 11px; font-weight: 500; white-space: nowrap; box-shadow: 0 4px 16px rgba(0, 0, 0, .14); visibility: hidden; opacity: 0; pointer-events: none; }
+.dock-tooltip.visible { visibility: visible; opacity: 1; }
 .dock-item:focus-visible:not(.active) { color: var(--text); }
 @media (hover: hover) and (pointer: fine) {
   .dock-item:hover:not(.active) { color: var(--text); }
 }
 .dock-item.active { color: var(--accent); background: var(--accent-fill); }
 .dock-item svg { flex: 0 0 auto; }
+@media (max-width: 899px) {
+  .floating-nav { width: min(400px, calc(100vw - 24px)); padding: 5px; }
+  .floating-nav .antwork-dock { gap: 2px; }
+  .dock-item { min-height: 52px; }
+  .dock-label { display: block; }
+  .dock-tooltip { display: none; }
+}
+
+.liquid-theme-toggle { position: relative; display: block; flex: 0 0 92px; width: 92px; height: 46px; min-height: 46px; padding: 0; border: 0; border-radius: 999px; background: #e7e7e9; color: #62626b; touch-action: none; }
+.liquid-theme-toggle[data-on="true"] { background: #262930; color: #bec5d0; }
+.liquid-theme-thumb { position: absolute; left: 0; top: 5px; width: 36px; height: 36px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .12); pointer-events: none; }
+.liquid-theme-toggle[data-on="true"] .liquid-theme-thumb { background: #e9ecf1; }
+.liquid-theme-toggle > svg { position: absolute; z-index: 1; top: 15px; pointer-events: none; }
+.liquid-theme-sun { left: 15px; }
+.liquid-theme-moon { right: 15px; }
+.liquid-theme-toggle[data-on="false"] .liquid-theme-sun, .liquid-theme-toggle[data-on="true"] .liquid-theme-moon { color: #18181b; }
 .page-stack, .dashboard-main, .dashboard-rail, .day-details { gap: 12px; }
 .page-title { min-height: 38px; }
 .panel { padding: 15px; }
@@ -156,7 +175,7 @@
   .timer-controls .button { min-width: 112px; }
   .profile-stats { grid-template-columns: 1fr; }
 }
-.profile-shortcut { padding: 0; overflow: visible; background: transparent; }
+.profile-shortcut, .profile-shortcut:hover { padding: 0; overflow: visible; border: 0; background: transparent; }
 .dashboard-avatar { position: relative; display: grid; place-items: center; width: 28px; height: 28px; }
 .dashboard-avatar img { width: 28px; height: 28px; object-fit: cover; border-radius: 50%; }
 .dashboard-status-dot { position: absolute; width: 8px; height: 8px; right: -3px; bottom: -2px; border: 2px solid var(--surface); border-radius: 50%; background: var(--muted); }
@@ -218,11 +237,7 @@
 }
 .dock-item { position: relative; border-radius: 8px; }
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .dock-item { transition: background-color .18s ease, color .18s ease; }
-  .dock-item svg {
-    transform: translateY(var(--dock-icon-lift, 0px)) scale(var(--dock-icon-scale, 1));
-    transform-origin: center;
-  }
+  .dock-item { transition: color .16s ease; }
 }
 .review-dialog, .quest-create-dialog, dialog.profile-editor {
   border-radius: 16px;
@@ -315,8 +330,6 @@
 }
 @media (max-width: 370px) {
   .topbar-actions { gap: 3px; }
-  .topbar-theme [role="radio"] { padding-inline: 8px; }
-  .topbar-theme [role="radio"] span:last-child { display: none; }
 }
 
 .timers-page .page-title { width: min(640px, 100%); margin-inline: auto; }
@@ -348,13 +361,63 @@
 .timer-panel .panel-heading > span { margin-left: auto; }
 .timer-move-controls { display: flex; min-width: 36px; align-items: center; justify-content: flex-end; gap: 2px; }
 .timer-move-controls:empty { display: none; }
-.timer-move-handle, .timer-position-reset { display: grid; width: 32px; min-width: 32px; height: 32px; min-height: 32px; place-items: center; padding: 0; color: var(--muted); }
+.timer-move-handle, .timer-layout-reset { display: grid; width: 32px; min-width: 32px; height: 32px; min-height: 32px; place-items: center; padding: 0; color: var(--muted); }
 .timer-move-handle { cursor: grab; touch-action: none; }
 .timer-move-handle:active { cursor: grabbing; }
-.timer-move-handle svg, .timer-position-reset svg { pointer-events: none; }
+.timer-move-handle svg, .timer-layout-reset svg { pointer-events: none; }
 .timer-history-hint { align-self: center; margin: 0; text-align: center; }
 @media (max-width: 899px) {
   .timer-drag-stage { height: auto !important; }
   .timer-drag-stage > .timer-panel { width: min(640px, 100%); }
   .timer-move-controls { display: none; }
+}
+
+.timers-page .page-title { width: 100%; }
+.timers-page .timers-focus { width: 100%; max-width: 1280px; margin-inline: auto; }
+.timer-panel { position: relative; isolation: isolate; overflow: visible; container-type: inline-size; container-name: timer-panel; }
+.timer-panel-content { position: relative; z-index: 2; display: flex; min-height: 100%; flex-direction: column; }
+.timer-panel.is-resizable { min-width: 420px; min-height: 400px; max-width: none; padding: 22px; }
+.timer-panel .panel-heading { min-width: 0; }
+.timer-panel .panel-heading > span { margin-left: auto; }
+.timer-customize-button { min-width: 32px; width: 32px; height: 32px; min-height: 32px; padding: 0; }
+.timer-panel-backdrop { position: absolute; z-index: 0; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.timer-panel-image, .timer-custom-preview-image { position: absolute; inset: -24px; width: calc(100% + 48px); height: calc(100% + 48px); object-fit: cover; pointer-events: none; }
+.timer-panel-contrast { position: absolute; inset: 0; background: rgba(0, 0, 0, .55); pointer-events: none; }
+.timer-panel.has-background, .timer-custom-preview.has-background {
+  --bg: #111315; --surface: #111315; --surface-2: #171b22; --hover: #232934;
+  --border: #454b56; --text: #fff; --muted: #fff; --faint: #bfc6d2;
+  --accent: #76a9ff; --accent-fill: rgba(84, 137, 226, .12); --focus: #a4c6ff;
+  color-scheme: dark; color: var(--text); background: #111315;
+}
+.timer-panel .timer-display { font-size: clamp(48px, 15cqi, 112px); margin: 22px 0 18px; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.035em; }
+.timer-panel.is-resizable .timer-setup { max-width: 100%; }
+.timer-panel.is-resizable .timer-setup .field-row { display: flex; }
+.timer-panel .timer-resize-handle { position: absolute; z-index: 4; right: 6px; bottom: 6px; display: grid; width: 34px; min-width: 34px; height: 34px; min-height: 34px; place-items: center; padding: 0; color: var(--muted); cursor: nwse-resize; touch-action: none; }
+.timer-panel .timer-resize-handle:active { cursor: nwse-resize; }
+.timer-panel .timer-resize-handle:focus-visible { outline-offset: 2px; }
+.timer-size-error { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 12px; color: var(--negative); font-size: 11px; overflow-wrap: anywhere; }
+.timer-customize-modal { width: min(520px, calc(100vw - 28px)); }
+.timer-custom-preview { position: relative; display: flex; min-height: 188px; flex-direction: column; align-items: center; justify-content: center; gap: 8px; overflow: hidden; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2); color: var(--text); }
+.timer-custom-preview strong, .timer-custom-preview > span { position: relative; z-index: 2; }
+.timer-custom-preview strong { font-size: clamp(38px, 9vw, 64px); line-height: 1; font-variant-numeric: tabular-nums; }
+.timer-custom-preview > span { color: var(--muted); font-size: 12px; }
+.timer-background-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
+.timer-background-actions label { cursor: pointer; }
+.timer-background-actions .muted { font-size: 11px; }
+.timer-slider-field { display: grid; grid-template-columns: 1fr auto; align-items: center; margin: 18px 0 8px !important; color: var(--text); }
+.timer-slider-field output { color: var(--muted); font-variant-numeric: tabular-nums; }
+.timer-slider-field input { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }
+.timer-customize-body > .button-row { margin-top: 18px; }
+.timer-customize-body > .button-row .button { flex: 1; }
+.timer-customize-modal .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@container timer-panel (max-width: 520px) {
+  .timer-panel-content .timer-setup .field-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .timer-panel-content .timer-setup .field-row > label:first-child { grid-column: 1 / -1; }
+  .timer-panel-content .timer-display { font-size: clamp(48px, 15cqi, 78px); }
+  .timer-panel-content .timer-controls .button { min-width: 112px; }
+}
+@media (max-width: 899px) {
+  .timer-panel.is-resizable { min-width: 0; min-height: 0; width: min(640px, 100%); max-width: 640px; }
+  .timer-panel .timer-resize-handle { display: none; }
+  .timer-panel .timer-display { font-size: clamp(48px, 15cqi, 72px); }
 }

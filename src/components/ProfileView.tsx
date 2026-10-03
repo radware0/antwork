@@ -15,7 +15,7 @@ function CampaignEditor({ campaign, mutate, onClose }: { campaign: Campaign | nu
     {dismiss => <form onSubmit={async event => {
       event.preventDefault();
       if (saving) return;
-      if (!title.trim() || !description.trim()) { setError('Add a title and description.'); return; }
+      if (!title.trim()) { setError('Add a title.'); return; }
       setSaving(true);
       try {
         await mutate(current => ({ ...current, campaigns: campaign
@@ -26,7 +26,7 @@ function CampaignEditor({ campaign, mutate, onClose }: { campaign: Campaign | nu
       finally { setSaving(false); }
     }}>
       <label className="field">Title<input value={title} onChange={event => setTitle(event.target.value)} maxLength={120} required /></label>
-      <label className="field">Description<textarea value={description} onChange={event => setDescription(event.target.value)} maxLength={500} rows={4} required /></label>
+      <label className="field">Description<textarea value={description} onChange={event => setDescription(event.target.value)} maxLength={500} rows={4} /></label>
       {error && <p className="form-error" role="alert">{error}</p>}
       <div className="button-row"><button className="button primary" disabled={saving}>{saving ? 'Saving…' : campaign ? 'Save campaign' : 'Create campaign'}</button><button type="button" className="button subtle" disabled={saving} onClick={dismiss}>Cancel</button></div>
     </form>}
@@ -53,7 +53,7 @@ export function ProfileView({ data, now, mutate, replace }: { data: AppData; now
         <div className="panel-heading"><h2>Campaigns</h2><button className="button subtle" onClick={() => setCampaignEditor('new')}>Create campaign</button></div>
         {data.campaigns.length === 0 && <p className="empty">Your next project starts here.</p>}
         {data.campaigns.map(campaign => <article className="campaign-row" key={campaign.id}>
-          <div className="campaign-copy"><strong>{campaign.title}</strong><p>{campaign.note || 'Add a description when you edit.'}</p><small>{campaign.completedAt === null ? 'Active campaign' : 'Finished campaign'}</small></div>
+          <div className="campaign-copy"><strong>{campaign.title}</strong>{campaign.note && <p>{campaign.note}</p>}<small>{campaign.completedAt === null ? 'Active campaign' : 'Finished campaign'}</small></div>
           <div className="campaign-actions"><button className="button subtle" onClick={() => setCampaignEditor(campaign)}>Edit</button><button className="button subtle" disabled={campaignBusy} onClick={async () => {
             if (campaignBusy) return; setCampaignBusy(true);
             try { await mutate(current => ({ ...current, campaigns: current.campaigns.map(item => item.id === campaign.id ? { ...item, completedAt: item.completedAt === null ? Date.now() : null } : item) })); }

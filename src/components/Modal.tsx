@@ -6,8 +6,8 @@ import { useSound } from '../SoundContext.tsx';
 
 type ModalChildren = ReactNode | ((dismiss: () => void) => ReactNode);
 
-export function Modal({ title, children, onClose, busy = false, className = '', queued = false }: {
-  title: string; children: ModalChildren; onClose: () => void | Promise<void>; busy?: boolean; className?: string; queued?: boolean;
+export function Modal({ title, children, onClose, busy = false, className = '', queued = false, quiet = false }: {
+  title: string; children: ModalChildren; onClose: () => void | Promise<void>; busy?: boolean; className?: string; queued?: boolean; quiet?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const opener = useRef<HTMLElement | null>(null);
@@ -23,7 +23,7 @@ export function Modal({ title, children, onClose, busy = false, className = '', 
       if (dialog.open || (queued && document.querySelector('dialog[open]'))) return;
       opener.current = document.activeElement as HTMLElement;
       dialog.showModal();
-      soundRef.current.click();
+      if (!quiet) soundRef.current.click();
       dialog.querySelector<HTMLElement>('input:not([type=file]), textarea, select, [data-initial-focus]')?.focus();
     };
     show();
@@ -34,7 +34,7 @@ export function Modal({ title, children, onClose, busy = false, className = '', 
       dialog.close();
       if (opener.current?.isConnected) opener.current.focus();
     };
-  }, [queued]);
+  }, [queued, quiet]);
   const close = () => { if (!busy) setClosing(true); };
   return <motion.dialog ref={ref} className={'app-modal ' + className} aria-labelledby={id}
     onCancel={event => { event.preventDefault(); close(); }}
@@ -48,7 +48,7 @@ export function Modal({ title, children, onClose, busy = false, className = '', 
     initial={{ opacity: 0, y: reduced ? 0 : 8 }}
     animate={{ opacity: closing ? 0 : 1, y: closing && !reduced ? 8 : 0 }}
     transition={{ duration: reduced ? 0 : 0.18, ease: [0.23, 1, 0.32, 1] }}
-    onAnimationComplete={() => { if (closing) void Promise.resolve().then(onClose).then(() => sound.click()).catch(() => setClosing(false)); }}>
+    onAnimationComplete={() => { if (closing) void Promise.resolve().then(onClose).then(() => { if (!quiet) sound.click(); }).catch(() => setClosing(false)); }}>
     <div className="panel-heading modal-heading"><h2 id={id}>{title}</h2><button type="button" className="icon-button" aria-label={'Close ' + title.toLowerCase()} disabled={busy} onClick={close}><X size={18} /></button></div>
     {typeof children === 'function' ? children(close) : children}
   </motion.dialog>;

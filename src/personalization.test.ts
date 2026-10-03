@@ -6,6 +6,9 @@ import * as profileMedia from './profileMedia.ts';
 
 test('version four backups default missing sound preferences to muted and preserve explicit choices', () => {
   const legacyV4 = createInitialData('2026-09-29') as unknown as Record<string, unknown>;
+  legacyV4.schemaVersion = 4;
+  delete legacyV4.timerPanel;
+  delete legacyV4.onboarding;
   delete legacyV4.preferences;
   const normalized = validateImport(legacyV4) as unknown as { preferences?: { interfaceSounds: boolean; timerAlarm: boolean } };
   assert.deepEqual(normalized.preferences, { interfaceSounds: false, timerAlarm: false });
@@ -43,6 +46,66 @@ test('saved Slate appearance becomes Black without changing imported history or 
   assert.deepEqual(migrated.journals, old.journals);
 });
 
+test('new workspaces include default timer workspace and username onboarding preferences', () => {
+  const data = createInitialData('2026-09-29') as unknown as Record<string, unknown>;
+  assert.equal(data.schemaVersion, 5);
+  assert.deepEqual(data.timerPanel, {
+    image: null,
+    imageOpacity: 30,
+    imageBlur: 0,
+    preferredWidth: 640,
+    preferredHeight: null,
+  });
+  assert.deepEqual(data.onboarding, { usernamePromptCompleted: false });
+});
+
+test('version four backups migrate to timer defaults and prompt only users without a handle', () => {
+  const old = createInitialData('2026-09-29') as unknown as Record<string, any>;
+  old.schemaVersion = 4;
+  delete old.timerPanel;
+  delete old.onboarding;
+  old.profile.username = '';
+  const migrated = validateImport(old) as unknown as Record<string, any>;
+  assert.equal(migrated.schemaVersion, 5);
+  assert.deepEqual(migrated.timerPanel, {
+    image: null,
+    imageOpacity: 30,
+    imageBlur: 0,
+    preferredWidth: 640,
+    preferredHeight: null,
+  });
+  assert.deepEqual(migrated.onboarding, { usernamePromptCompleted: false });
+
+  const named = validateImport({ ...old, profile: { ...old.profile, username: '@Ant_Runner' } }) as unknown as Record<string, any>;
+  assert.deepEqual(named.onboarding, { usernamePromptCompleted: true });
+  assert.equal(named.profile.username, 'ant_runner');
+});
+
+test('version five round trips timer customization, onboarding, images, and local work unchanged', () => {
+  const original = createInitialData('2026-09-29') as unknown as Record<string, any>;
+  const image = 'data:image/webp;base64,UklGRgAAAABXRUJQVlA4';
+  original.schemaVersion = 5;
+  original.timerPanel = { image, imageOpacity: 72, imageBlur: 8, preferredWidth: 960, preferredHeight: 540 };
+  original.onboarding = { usernamePromptCompleted: true };
+  original.profile.username = 'ant_runner';
+  const sessionStart = new Date(2026, 8, 29, 10).getTime();
+  original.sessions.push({ id: 'keep', timing: 'intervals', intervals: [{ start: sessionStart, end: sessionStart + 60000 }], source: 'manual', questOccurrenceId: null, campaignId: null, result: null, note: 'kept' });
+  const restored = validateImport(original) as unknown as Record<string, any>;
+  assert.deepEqual(restored.timerPanel, original.timerPanel);
+  assert.deepEqual(restored.onboarding, original.onboarding);
+  assert.deepEqual(restored.sessions, original.sessions);
+  assert.equal(restored.profile.username, 'ant_runner');
+});
+
+test('version five rejects timer preferences outside their documented bounds', () => {
+  const data = createInitialData('2026-09-29') as unknown as Record<string, any>;
+  assert.throws(() => validateImport({ ...data, timerPanel: { ...data.timerPanel, preferredWidth: 419 } }), /Invalid backup/);
+  assert.throws(() => validateImport({ ...data, timerPanel: { ...data.timerPanel, preferredHeight: 761 } }), /Invalid backup/);
+  assert.throws(() => validateImport({ ...data, timerPanel: { ...data.timerPanel, imageOpacity: 101 } }), /Invalid backup/);
+  assert.throws(() => validateImport({ ...data, timerPanel: { ...data.timerPanel, imageBlur: 25 } }), /Invalid backup/);
+  assert.throws(() => validateImport({ ...data, timerPanel: { ...data.timerPanel, image: 'data:image/png;base64,not-webp' } }), /Invalid backup/);
+});
+
 test('the global sound control mutes both sounds and unmutes a previously silent install', async () => {
   const sound = await import('./sound.ts') as typeof import('./sound.ts') & { toggleSoundPreferences?: (value: { interfaceSounds: boolean; timerAlarm: boolean }) => { interfaceSounds: boolean; timerAlarm: boolean } };
   assert.equal(typeof sound.toggleSoundPreferences, 'function');
@@ -59,6 +122,16 @@ test('profile crop geometry covers the output and clamps pan without empty edges
   assert.deepEqual(cropSourceRect!(1200, 800, 'avatar', { zoom: 1, x: 4, y: -4 }), { x: 400, y: 0, width: 800, height: 800 });
   assert.deepEqual(cropSourceRect!(1200, 800, 'avatar', { zoom: 2, x: 0, y: 0 }), { x: 400, y: 200, width: 400, height: 400 });
   assert.deepEqual(cropSourceRect!(1600, 1200, 'banner', { zoom: 1, x: 0, y: 0 }), { x: 0, y: 300, width: 1600, height: 600 });
+});
+
+test('timer background normalization keeps aspect ratio and caps the longest edge', () => {
+  const fit = (profileMedia as unknown as {
+    fitTimerImageDimensions?: (width: number, height: number, limit?: number) => { width: number; height: number };
+  }).fitTimerImageDimensions;
+  assert.equal(typeof fit, 'function');
+  assert.deepEqual(fit!(320, 200), { width: 320, height: 200 });
+  assert.deepEqual(fit!(4000, 2000), { width: 1600, height: 800 });
+  assert.deepEqual(fit!(1000, 3000), { width: 533, height: 1600 });
 });
 
 test('banner frame preview uses the same centered cover crop as the displayed banner', () => {

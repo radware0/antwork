@@ -3,6 +3,8 @@ import { mkdir } from 'node:fs/promises';
 import { chromium } from 'playwright-core';
 import { checkDockInteractions } from './dock-checks.mjs';
 import { checkTimerInteractions } from './timer-checks.mjs';
+import { checkThemeInteractions, setAppearance } from './theme-checks.mjs';
+import { checkTimerPresentation, checkRunningLayoutReset } from './presentation-checks.mjs';
 
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext({ storageState: { cookies: [], origins: [] }, viewport: { width: 1440, height: 900 }, acceptDownloads: true });
@@ -39,12 +41,28 @@ const capture = async name => { await page.waitForTimeout(220); await page.scree
 try {
   await page.goto(base, { waitUntil: 'networkidle' });
   await page.getByRole('heading', { name: 'Dashboard', exact: true }).waitFor();
-  assert.equal((await readData()).schemaVersion, 4);
+  assert.equal((await readData()).schemaVersion, 5);
   assert.equal((await readData()).theme, 'black');
   assert.equal((await readData()).sessions.length, 0, 'workflow starts in an isolated empty browser context');
-  assert.equal(await page.getByRole('radiogroup', { name: 'Theme' }).getByRole('radio').count(), 2);
+  assert.deepEqual((await readData()).timerPanel, { image: null, imageOpacity: 30, imageBlur: 0, preferredWidth: 640, preferredHeight: null });
+  assert.deepEqual((await readData()).onboarding, { usernamePromptCompleted: false });
+  assert.equal(await page.getByRole('switch', { name: 'Dark appearance', exact: true }).count(), 1);
   assert.deepEqual((await readData()).preferences, { interfaceSounds: true, timerAlarm: true });
   assert.equal(await page.evaluate(() => window.qaSounds.length), 0);
+  const usernamePrompt = dialog('Pick your handle');
+  await usernamePrompt.waitFor();
+  await usernamePrompt.getByLabel('Username').fill('ab');
+  await usernamePrompt.getByRole('button', { name: 'Save handle' }).click();
+  await usernamePrompt.getByRole('alert').waitFor();
+  await usernamePrompt.getByLabel('Username').fill('@first_ant');
+  await usernamePrompt.getByRole('button', { name: 'Save handle' }).click();
+  await usernamePrompt.waitFor({ state: 'hidden' });
+  assert.equal((await readData()).profile.username, 'first_ant');
+  assert.deepEqual((await readData()).onboarding, { usernamePromptCompleted: true });
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.getByRole('heading', { name: 'Dashboard', exact: true }).waitFor();
+  assert.equal(await usernamePrompt.count(), 0, 'saved handle prevents another onboarding prompt');
+  await checkThemeInteractions(page, readData);
   assert.equal(await page.getByRole('link', { name: 'Docs' }).count(), 1);
   assert.equal(await page.getByRole('button', { name: 'Mute sounds' }).count(), 1);
   assert.equal(await page.locator('.calendar-overview button.day-cell').count(), 0);
@@ -62,6 +80,7 @@ try {
   await page.reload({ waitUntil: 'networkidle' });
   assert.equal((await readData()).timer.id, timerId);
   await page.getByRole('button', { name: 'Open Timer' }).click();
+  await checkRunningLayoutReset(page, readData);
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await page.getByRole('button', { name: 'Resume', exact: true }).waitFor();
   await page.reload({ waitUntil: 'networkidle' });
@@ -174,10 +193,10 @@ try {
   await page.getByRole('button', { name: 'Create campaign', exact: true }).click();
   const campaign = dialog('Create campaign');
   await campaign.getByLabel('Title', { exact: true }).fill('Build a useful app');
+  assert.equal(await campaign.getByLabel('Description').getAttribute('required'), null, 'campaign description is optional');
   await campaign.getByRole('button', { name: 'Create campaign', exact: true }).click();
-  assert.notEqual(await campaign.getByLabel('Description').evaluate(input => input.validationMessage), '');
-  await campaign.getByLabel('Description').fill('Make working feel worth returning to.');
-  await campaign.getByRole('button', { name: 'Create campaign', exact: true }).click(); await campaign.waitFor({ state: 'hidden' });
+  await campaign.waitFor({ state: 'hidden' });
+  assert.equal((await readData()).campaigns[0].note, '', 'title-only campaign saves without description filler');
   const campaignRow = page.locator('.campaign-row').first();
   await campaignRow.getByRole('button', { name: 'Edit', exact: true }).click();
   await dialog('Edit campaign').getByLabel('Title', { exact: true }).fill('A deliberately long campaign title to test wrapping in compact cards');
@@ -185,10 +204,39 @@ try {
   await campaignRow.getByRole('button', { name: 'Finish', exact: true }).click();
   await campaignRow.getByRole('button', { name: 'Reopen', exact: true }).click();
 
+  await nav('Timers');
+  await page.getByRole('button', { name: 'Customize timer', exact: true }).click();
+  const customizeTimer = dialog('Customize timer');
+  await customizeTimer.waitFor();
+  await customizeTimer.getByLabel(/Upload image/).setInputFiles({ name: 'wrong.gif', mimeType: 'image/gif', buffer: Buffer.from('not an image') });
+  await customizeTimer.getByRole('alert').waitFor();
+  await customizeTimer.getByLabel(/Upload image/).setInputFiles('.qa/profile-avatar-source.png');
+  await customizeTimer.locator('.timer-custom-preview-image').waitFor();
+  const opacity = customizeTimer.getByRole('slider', { name: 'Image opacity' });
+  await opacity.evaluate((input, value) => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, value); input.dispatchEvent(new Event('input', { bubbles: true })); }, '46');
+  assert.equal(await opacity.inputValue(), '46');
+  const blur = customizeTimer.getByRole('slider', { name: 'Blur' });
+  await blur.evaluate((input, value) => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, value); input.dispatchEvent(new Event('input', { bubbles: true })); }, '5');
+  assert.equal(await blur.inputValue(), '5');
+  await customizeTimer.getByRole('button', { name: 'Save appearance' }).click();
+  await customizeTimer.waitFor({ state: 'hidden' });
+  const savedTimerStyle = (await readData()).timerPanel;
+  assert.ok(savedTimerStyle.image?.startsWith('data:image/webp;base64,'));
+  assert.equal(savedTimerStyle.imageOpacity, 46);
+  assert.equal(savedTimerStyle.imageBlur, 5);
+  assert.ok((await page.locator('.timer-panel-image').count()) === 1, 'timer background appears on Timers');
+  await checkTimerPresentation(page, readData, process.env.QA_SKIP_SCREENSHOTS ? null : capture);
+  await page.getByRole('button', { name: 'Customize timer', exact: true }).click();
+  await customizeTimer.getByRole('button', { name: 'Remove image' }).click();
+  await customizeTimer.getByRole('slider', { name: 'Image opacity' }).evaluate((input) => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, '70'); input.dispatchEvent(new Event('input', { bubbles: true })); });
+  await customizeTimer.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await customizeTimer.waitFor({ state: 'hidden' });
+  assert.deepEqual((await readData()).timerPanel, savedTimerStyle, 'Cancel discards image and slider changes');
+
   assert.equal(await page.getByRole('button', { name: 'Change appearance' }).count(), 0);
-  await page.getByRole('radiogroup', { name: 'Theme' }).getByRole('radio', { name: 'White' }).click();
+  await setAppearance(page, 'white');
   assert.equal((await readData()).theme, 'white');
-  await page.getByRole('radiogroup', { name: 'Theme' }).getByRole('radio', { name: 'Black' }).click();
+  await setAppearance(page, 'black');
   assert.equal((await readData()).theme, 'black');
   assert.deepEqual((await readData()).preferences, { interfaceSounds: true, timerAlarm: true });
   await page.getByRole('button', { name: 'Mute sounds' }).click();
@@ -308,7 +356,7 @@ try {
   await page.locator('.journal-panel').getByRole('button', { name: 'Read journal' }).waitFor();
 
   for (const theme of ['white', 'black']) {
-    await page.getByRole('radiogroup', { name: 'Theme' }).getByRole('radio', { name: theme === 'white' ? 'White' : 'Black' }).click();
+    await setAppearance(page, theme);
     assert.equal((await readData()).theme, theme);
     for (const [width, height] of [[1440, 900], [1366, 768], [1100, 820], [390, 844]]) {
       await page.setViewportSize({ width, height });
@@ -316,7 +364,11 @@ try {
       for (const name of ['Dashboard', 'Timers', 'Calendar', 'Work Hours', 'Profile']) {
         await nav(name); await noOverflow();
         if (name === 'Dashboard') assert.ok(await page.locator('.trend-compact .hours-area').evaluate(el => el.getBoundingClientRect().height >= 70), 'lazy Dashboard chart reserves its height');
-        if (name === 'Timers') await checkTimerInteractions(page, { draggable: width >= 900 });
+        if (name === 'Timers') {
+          await checkTimerInteractions(page, { draggable: width >= 900 });
+          assert.equal(await page.locator('.timer-panel-image').count(), 1, 'saved timer background remains visible in both layouts');
+          if (width < 900) assert.equal(await page.getByRole('button', { name: 'Resize timer panel', exact: true }).count(), 0, 'saved background does not make the phone panel resizable');
+        }
         if (name === 'Work Hours') {
           const chartValues = await page.locator('.hours-area .sr-only li').allTextContents();
           assert.equal(chartValues.length, 30);
@@ -330,6 +382,13 @@ try {
       }
     }
   }
+  await nav('Timers');
+  await page.getByRole('button', { name: 'Customize timer', exact: true }).click();
+  await customizeTimer.getByRole('button', { name: 'Remove image' }).click();
+  await customizeTimer.getByRole('button', { name: 'Save appearance' }).click();
+  await customizeTimer.waitFor({ state: 'hidden' });
+  assert.equal((await readData()).timerPanel.image, null, 'saved removal clears the background');
+
   await page.setViewportSize({ width: 1366, height: 768 }); await nav('Dashboard');
   for (let i = 0; i < 12 && await page.locator('.calendar-overview .day-cell').count() !== 42; i++) await page.getByRole('button', { name: 'Next month' }).click();
   assert.equal(await page.locator('.calendar-overview .day-cell').count(), 42);
@@ -352,6 +411,9 @@ try {
   await touchPage.goto(base, { waitUntil: 'networkidle' });
   await touchPage.getByRole('heading', { name: 'Dashboard', exact: true }).waitFor();
   assert.equal(await touchPage.evaluate(() => matchMedia('(hover: none)').matches), true);
+  const touchPrompt = touchPage.getByRole('dialog', { name: 'Pick your handle', exact: true });
+  await touchPrompt.getByRole('button', { name: 'Skip for now' }).click();
+  await touchPrompt.waitFor({ state: 'hidden' });
   await checkDockInteractions(touchPage, { staticIcons: true });
   for (const name of ['Dashboard', 'Timers', 'Calendar', 'Work Hours', 'Profile']) {
     const touchButton = touchPage.getByRole('navigation', { name: 'Main navigation' }).getByRole('button', { name, exact: true });
@@ -361,6 +423,27 @@ try {
     assert.equal(await touchButton.locator('svg').evaluate(element => getComputedStyle(element).transform), 'none', 'touch navigation does not magnify icons');
   }
   await touchContext.close();
+
+  const skipContext = await browser.newContext({ viewport: { width: 1366, height: 768 } });
+  const skipPage = await skipContext.newPage();
+  skipPage.on('pageerror', error => errors.push(error.message));
+  await skipPage.goto(base, { waitUntil: 'networkidle' });
+  await skipPage.getByRole('heading', { name: 'Dashboard', exact: true }).waitFor();
+  const skipPrompt = skipPage.getByRole('dialog', { name: 'Pick your handle', exact: true });
+  await skipPrompt.waitFor();
+  await skipPage.evaluate(() => { window.qaPut = IDBObjectStore.prototype.put; IDBObjectStore.prototype.put = function () { throw new DOMException('Test quota failure', 'QuotaExceededError'); }; });
+  await skipPage.keyboard.press('Escape');
+  await skipPrompt.waitFor({ state: 'hidden' });
+  await skipPage.getByRole('status').filter({ hasText: 'may appear again after reload' }).waitFor();
+  const skippedData = await skipPage.evaluate(() => new Promise(resolve => { const request = indexedDB.open('work-ledger', 1); request.onsuccess = () => { const db = request.result; const get = db.transaction('documents').objectStore('documents').get('current'); get.onsuccess = () => { resolve(get.result); db.close(); }; }; }));
+  assert.equal(skippedData.onboarding.usernamePromptCompleted, false, 'failed skip save does not pretend to persist');
+  await skipPage.evaluate(() => { IDBObjectStore.prototype.put = window.qaPut; });
+  await skipPage.reload({ waitUntil: 'networkidle' });
+  await skipPage.getByRole('dialog', { name: 'Pick your handle', exact: true }).waitFor();
+  await skipPage.getByRole('button', { name: 'Skip for now' }).click();
+  await skipPage.getByRole('dialog', { name: 'Pick your handle', exact: true }).waitFor({ state: 'hidden' });
+  assert.equal((await skipPage.evaluate(() => new Promise(resolve => { const request = indexedDB.open('work-ledger', 1); request.onsuccess = () => { const db = request.result; const get = db.transaction('documents').objectStore('documents').get('current'); get.onsuccess = () => { resolve(get.result); db.close(); }; }; }))).onboarding.usernamePromptCompleted, true);
+  await skipContext.close();
 
   await nav('Profile');
   const backup = await readData();

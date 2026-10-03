@@ -18,6 +18,8 @@ The first dashboard carried a graph, tasks, timer, journal, and calendar as peer
 
 ## Current beta polish
 
-Profile cropping gained visible grids and desktop/mobile banner previews because the saved 8:3 asset can display inside a much wider compact desktop strip. Avatars render as circles. The hours graph uses a restrained, registry-installed ECharts line with a small area fill; the dock and Black/White pill also use adapted registry components. New installs start Black. Old System and Slate preferences resolve to Black, while White stays White. Sound moved from a settings form to a global mute action. Documentation distinguishes what works locally from the hosted product ambition.
+Profile cropping gained visible grids and desktop/mobile banner previews because the saved 8:3 asset can display inside a much wider compact desktop strip. Avatars render as circles. The hours graph uses a restrained, registry-installed ECharts line with a small area fill. The dock and theme control first used registry components; the current versions adapt supplied minimal-dock and liquid-switch source. New installs start Black. Old System and Slate preferences resolve to Black, while White stays White. Sound moved from a settings form to a global mute action. Documentation distinguishes what works locally from the hosted product ambition.
+
+The raised metallic panel edges were later removed in favor of quiet borders. White became neutral rather than blue-grey, and uploaded timer images received one shared dark-backed treatment in both themes. Desktop navigation uses icons and tooltips while phones retain labels. Timer position and size now reset together, without changing the recording or its background.
 
 The earlier mechanics are documented to explain the journey, not advertised as present features. No conversion, retention, productivity, or health effect has been measured for this beta.

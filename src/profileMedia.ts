@@ -49,6 +49,32 @@ function validateProfileFile(file: File) {
   if (file.size > 10 * 1024 * 1024) throw new Error('Choose an image under 10 MB.');
 }
 
+export function fitTimerImageDimensions(width: number, height: number, limit = 1600): { width: number; height: number } {
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0 || limit < 1) {
+    throw new Error('This image has no visible pixels.');
+  }
+  const scale = Math.min(1, limit / Math.max(width, height));
+  return { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) };
+}
+
+export async function normalizeTimerBackground(file: File): Promise<string> {
+  const source = await prepareProfileImage(file);
+  try {
+    const output = fitTimerImageDimensions(source.width, source.height);
+    const canvas = document.createElement('canvas');
+    canvas.width = output.width;
+    canvas.height = output.height;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Image editing is unavailable in this browser.');
+    context.drawImage(source.bitmap, 0, 0, output.width, output.height);
+    const result = canvas.toDataURL('image/webp', 0.85);
+    if (!result.startsWith('data:image/webp;base64,') || result.length > 2_800_000) {
+      throw new Error('The image is too large after processing. Choose a simpler image.');
+    }
+    return result;
+  } finally { source.dispose(); }
+}
+
 export async function prepareProfileImage(file: File): Promise<PreparedProfileImage> {
   validateProfileFile(file);
   let bitmap: ImageBitmap;

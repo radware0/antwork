@@ -2,7 +2,9 @@
 
 The five app destinations are Dashboard, Timers, Calendar, Work Hours, and Profile. They share a bottom dock; editing uses focused dialogs rather than expanding into the reading layout.
 
-Dashboard and Work Hours charts show daily deep work in hours. Screen-reader summaries and chart tooltips use the same unit. The Timers page keeps its complete work timer panel centered at first; desktop users can reposition it with the header handle or keyboard. It stays within the free space above the dock. Phone layouts keep normal scrolling, and placement resets when antwork reloads.
+Dashboard and Work Hours charts show daily deep work in hours. Screen-reader summaries and chart tooltips use the same unit. The Timers page keeps its complete work timer panel centered at first. On desktop, drag it by the header grip or resize it from the bottom-right handle; movement and resizing stay inside the free space above the dock. Arrow keys change position or size by 16px, Shift+arrow by 64px. Reset layout, or Home on either handle, restores centered placement and the default 640px, content-fit size together. The preferred width and height save after the gesture or key burst ends. Position remains in memory across page changes and resets when antwork reloads. Small workspaces and phone layouts keep normal scrolling and hide both handles.
+
+Choose **Customize timer** to upload, replace, or remove a personal background. PNG, JPEG, and WebP images up to 10 MB are converted locally to static WebP with a 1600px maximum long edge. Image opacity (0–100%) and blur (0–24px) affect only the image. Charcoal backing, a 55% black contrast layer, white text, and dark controls give saved images the same treatment in both themes and the preview. Defaults are 30% opacity and no blur. Save applies the draft. Cancel leaves the last saved appearance in place. The image is used only on the Timers page, including its fixed phone layout.
 
 ## Hours, sessions, and results
 
@@ -18,7 +20,7 @@ Score is one point for every 15 cumulative minutes of **saved** deep work. It is
 
 Worked days show their hours and a green treatment. Past days with no logged work and future days remain neutral. There is no daily target or target difference in the current interface. Dashboard dates cannot be edited; Calendar dates select a day for session and journal review.
 
-Profile shows total saved deep work, best saved day by hours, longest saved session, most saved hours linked to one campaign, and lifetime Score. A live status shows an active or paused session before reverting to today's recorded work. The identity editor holds a display name, local @username, bio, links, avatar, and banner. Image uploads are cropped locally to static WebP; only Save profile persists a draft.
+Profile shows total saved deep work, best saved day by hours, longest saved session, most saved hours linked to one campaign, and lifetime Score. A live status shows an active or paused session before reverting to today's recorded work. The identity editor holds a display name, local @username, bio, links, avatar, and banner. Image uploads are cropped locally to static WebP; only Save profile persists a draft. New workspaces ask once for a username after local history loads; Skip, Close, and Escape complete the prompt without a handle. Existing usernames skip onboarding. Handles remain local and have no registration or availability check. Campaigns need a title but may have no description.
 
 ## Sound and appearance
 

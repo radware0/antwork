@@ -16,4 +16,6 @@ Start with the [overview](docs/index.md), [daily loop](docs/daily-loop.md), and 
 
 Your data stays in this browser's IndexedDB unless you export it. JSON backups contain readable personal text and images. Export a backup before clearing site data or moving to another domain.
 
-New workspaces open in Black; switch between Black and White from the top bar. The chart, dock, and theme control are adapted registry-installed components. Their licenses are recorded in [third-party notices](THIRD_PARTY_NOTICES.md). No project-wide license has been granted for antwork.
+New workspaces open in Black; switch between Black and White from the top bar. The chart adapts the registry-installed EvilCharts component; the minimal dock and liquid theme switch adapt supplied source. Applicable licenses are recorded in [third-party notices](THIRD_PARTY_NOTICES.md). No project-wide license has been granted for antwork.
+
+On desktop, the Timers panel can be moved and resized. Add a local image background and adjust its opacity and blur from **Customize timer**. New workspaces are asked once for a local username and can skip it. Campaign descriptions are optional. JSON backups use schema version 5; this build imports versions 1–5, but older builds cannot import v5 backups.

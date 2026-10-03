@@ -4,7 +4,7 @@ import { chromium } from 'playwright-core';
 
 const geometry = button => button.evaluate(element => {
   const rect = node => { const r = node.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; };
-  return { tile: rect(element), label: rect(element.querySelector('span')), icon: rect(element.querySelector('svg')) };
+  return { tile: rect(element), label: rect(element.querySelector('.dock-label')), icon: rect(element.querySelector('svg')) };
 });
 const near = (actual, expected, message, tolerance = .15) => assert.ok(Math.abs(actual - expected) <= tolerance, `${message}: ${actual} vs ${expected}`);
 const sameBox = (actual, expected, message) => { for (const field of ['x', 'y', 'width', 'height']) near(actual[field], expected[field], `${message} ${field}`); };
@@ -12,7 +12,10 @@ const sameBox = (actual, expected, message) => { for (const field of ['x', 'y', 
 export async function checkDockInteractions(page, { staticIcons = false } = {}) {
   const dock = page.getByRole('navigation', { name: 'Main navigation' });
   const buttons = dock.getByRole('button');
+  const phone = await page.evaluate(() => innerWidth < 900);
+  staticIcons ||= phone || await page.evaluate(() => matchMedia('(hover: none)').matches);
   assert.equal(await buttons.count(), 5);
+  assert.equal(await buttons.first().locator('.dock-label').evaluate(el => getComputedStyle(el).display !== 'none'), phone, 'phone labels are visible and desktop labels use tooltips');
   for (const button of await buttons.all()) {
     await page.mouse.move(0, 0);
     await button.evaluate(element => element.blur());
@@ -27,6 +30,7 @@ export async function checkDockInteractions(page, { staticIcons = false } = {}) 
     await button.hover();
     await page.waitForTimeout(350);
     const hovered = await geometry(button);
+    if (!phone) assert.equal(await button.locator('..').getByRole('tooltip').count(), 1, 'desktop hover exposes its tooltip');
     assert.equal(await button.evaluate(element => getComputedStyle(element).backgroundColor), beforeFill, 'hover keeps each tile background unchanged');
     sameBox(hovered.tile, before.tile, 'hover keeps the tile fixed');
     sameBox(hovered.label, before.label, 'hover keeps the label fixed');
@@ -73,6 +77,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   try {
     await page.goto(process.env.QA_BASE_URL ?? 'http://localhost:5173/', { waitUntil: 'networkidle' });
     await page.getByRole('heading', { name: 'Dashboard', exact: true }).waitFor();
+    const prompt = page.getByRole('dialog', { name: 'Pick your handle', exact: true });
+    if (await prompt.count()) { await prompt.getByRole('button', { name: 'Skip for now' }).click(); await prompt.waitFor({ state: 'hidden' }); }
     await page.evaluate(() => document.fonts.ready);
     await checkDockInteractions(page);
     console.log('Dock interaction regression passed.');

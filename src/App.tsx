@@ -9,12 +9,13 @@ import { JournalView } from './components/JournalView.tsx';
 import { SessionReview, TimerStatus, TimerView, type TimerPosition } from './components/TimerView.tsx';
 import { HoursChart, WorkHoursView, ManualEntry, SessionHistory } from './components/WorkHoursView.tsx';
 import { ProfileView } from './components/ProfileView.tsx';
+import { UsernamePrompt } from './components/UsernamePrompt.tsx';
 import { LoadingView } from './components/LoadingView.tsx';
 import { SoundProvider } from './SoundContext.tsx';
 import { playInterfaceSound, toggleSoundPreferences } from './sound.ts';
 import { Avatar, AvatarFallback, AvatarImage } from './components/ui/avatar.tsx';
 import { FloatingDock } from './components/ui/floating-dock.tsx';
-import ThemeToggle from './components/smoothui/theme-toggle/index.tsx';
+import { LiquidThemeToggle } from './components/ui/liquid-theme-toggle.tsx';
 import type { AppData, DateKey } from './types.ts';
 
 type Page = 'dashboard' | 'timers' | 'calendar' | 'hours' | 'profile';
@@ -68,6 +69,8 @@ export default function App() {
   const [timerPosition, setTimerPosition] = useState<TimerPosition>({ x: 0, y: 0 });
   const [soundBusy, setSoundBusy] = useState(false);
   const [themeBusy, setThemeBusy] = useState(false);
+  const [usernamePromptDismissed, setUsernamePromptDismissed] = useState(false);
+  const [usernamePromptWarning, setUsernamePromptWarning] = useState('');
   useEffect(() => {
     const onHash = () => setPage(readPage());
     window.addEventListener('hashchange', onHash);
@@ -102,20 +105,20 @@ export default function App() {
     } catch { /* The shared error banner reports persistence failures. */ }
     finally { setSoundBusy(false); }
   };
-  const switchTheme = async (next: 'light' | 'dark' | 'system') => {
-    if (themeBusy || next === 'system') return;
+  const switchTheme = async (next: 'light' | 'dark') => {
+    if (themeBusy) return;
     setThemeBusy(true);
     try {
       await mutate(current => ({ ...current, theme: next === 'light' ? 'white' : 'black' }));
       playInterfaceSound(Boolean(data.preferences.interfaceSounds));
-    } catch { /* The shared error banner reports persistence failures. */ }
-    finally { setThemeBusy(false); }
+    } finally { setThemeBusy(false); }
   };
 
   return <SoundProvider preferences={data.preferences}><div className="app-shell">
-    <header className="app-topbar"><div className="brand"><span className="brand-mark" aria-hidden="true">a</span><span className="brand-name">antwork</span></div><div className="topbar-actions"><ThemeToggle className="topbar-theme" variant="pill" size="sm" showSystem={false} theme={data.theme === 'white' ? 'light' : 'dark'} onThemeChange={next => void switchTheme(next)} /><a className="topbar-docs" href="/docs/">Docs</a><button type="button" className="icon-button sound-toggle" aria-label={soundOn ? 'Mute sounds' : 'Unmute sounds'} title={soundOn ? 'Mute sounds' : 'Unmute sounds'} aria-pressed={!soundOn} disabled={soundBusy} onClick={() => void toggleSound()}>{soundOn ? <Volume2 size={17} aria-hidden="true" /> : <VolumeX size={17} aria-hidden="true" />}</button></div></header>
+    <header className="app-topbar"><div className="brand"><span className="brand-mark" aria-hidden="true">a</span><span className="brand-name">antwork</span></div><div className="topbar-actions"><LiquidThemeToggle className="topbar-theme" disabled={themeBusy} theme={data.theme === 'white' ? 'light' : 'dark'} onThemeChange={switchTheme} /><a className="topbar-docs" href="/docs/">Docs</a><button type="button" className="icon-button sound-toggle" aria-label={soundOn ? 'Mute sounds' : 'Unmute sounds'} title={soundOn ? 'Mute sounds' : 'Unmute sounds'} aria-pressed={!soundOn} disabled={soundBusy} onClick={() => void toggleSound()}>{soundOn ? <Volume2 size={17} aria-hidden="true" /> : <VolumeX size={17} aria-hidden="true" />}</button></div></header>
     <main className="main-content">
       {error && <div className="error-banner" role="alert">{error}<button aria-label="Dismiss error" onClick={clearError}><X size={16} /></button></div>}
+      {usernamePromptWarning && <p className="muted" role="status">{usernamePromptWarning}</p>}
       <motion.div key={page} initial={{ opacity: 0.65, y: reduced ? 0 : 5 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduced ? 0 : 0.18, ease: [0.23, 1, 0.32, 1] }} className="page-transition">
       {page === 'dashboard' && <Dashboard data={data} now={now} mutate={mutate} month={month} setMonth={setMonth} openCalendar={() => navigate('calendar')} openTimer={() => navigate('timers')} openProfile={() => navigate('profile')} />}
       {page === 'timers' && <div className="page-stack timers-page"><div className="page-title"><div><h1>Timers</h1><p>Start a stopwatch or choose a countdown.</p></div></div><TimerView data={data} now={now} mutate={mutate} position={timerPosition} onPositionChange={setTimerPosition} /> </div>}
@@ -126,5 +129,6 @@ export default function App() {
     </main>
     <FloatingDock items={nav} active={page} onNavigate={navigate} />
     {data.pendingReviewId && <SessionReview key={data.pendingReviewId} data={data} mutate={mutate} />}
+    {!data.pendingReviewId && !usernamePromptDismissed && !data.profile.username && !data.onboarding.usernamePromptCompleted && <UsernamePrompt mutate={mutate} onDone={warning => { setUsernamePromptDismissed(true); setUsernamePromptWarning(warning ?? ''); }} />}
   </div></SoundProvider>;
 }

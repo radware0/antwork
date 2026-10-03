@@ -77,14 +77,28 @@ export interface SoundPreferences {
   timerAlarm: boolean;
 }
 
+export interface TimerPanelPreferences {
+  image: string | null;
+  imageOpacity: number;
+  imageBlur: number;
+  preferredWidth: number;
+  preferredHeight: number | null;
+}
+
+export interface OnboardingSettings {
+  usernamePromptCompleted: boolean;
+}
+
 export interface AppData {
-  schemaVersion: 4;
+  schemaVersion: 5;
   setupDate: DateKey;
   setupComplete: boolean;
   weeklyTargets: number[];
   dailyTargets: Record<DateKey, number>;
   theme: Theme;
   preferences: SoundPreferences;
+  timerPanel: TimerPanelPreferences;
+  onboarding: OnboardingSettings;
   profile: ProfileIdentity;
   campaigns: Campaign[];
   quests: Quest[];

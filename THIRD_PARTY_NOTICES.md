@@ -1,10 +1,9 @@
 # Third-party notices
 
-The following registry-installed source files are included and adapted in antwork. This notice covers those components only; it is not a license for antwork as a whole.
+The following third-party source files are included and adapted in antwork. This notice covers those components only; it is not a license for antwork as a whole.
 
 - EvilCharts ECharts line chart and supporting UI files in `src/components/evilcharts/`: Copyright (c) 2026 Gurbinder. [Upstream license](https://github.com/legions-developer/evilcharts/blob/main/LICENSE).
-- Magic UI Dock in `src/components/ui/dock.tsx`: Copyright (c) Magic UI. [Upstream license](https://github.com/magicuidesign/magicui/blob/main/LICENSE.md).
-- SmoothUI Theme Toggle in `src/components/smoothui/theme-toggle/`: Copyright (c) 2024 Eduardo Calvo. [Upstream license](https://github.com/educlopez/smoothui/blob/main/LICENSE).
+- Bencho liquid theme toggle in `src/components/ui/liquid-theme-toggle.tsx`: Copyright (c) 2026 Lorenzo Cabra. [Upstream license](https://bencho.dev/licence). Adapted from the supplied Code-pane component without the demo wrapper.
 
 Each component above is subject to the MIT License:
 

@@ -106,13 +106,15 @@ export function generateOccurrences(
 
 export function createInitialData(setupDate: DateKey): AppData {
   return {
-    schemaVersion: 4,
+    schemaVersion: 5,
     setupDate,
     setupComplete: true,
     weeklyTargets: [0, 4, 4, 4, 4, 4, 0],
     dailyTargets: {},
     theme: 'black',
     preferences: { interfaceSounds: true, timerAlarm: true },
+    timerPanel: { image: null, imageOpacity: 30, imageBlur: 0, preferredWidth: 640, preferredHeight: null },
+    onboarding: { usernamePromptCompleted: false },
     profile: { name: '', username: '', bio: '', avatar: null, banner: null, links: [] },
     campaigns: [],
     quests: [],

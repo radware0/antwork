@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { dateKey, localDate } from './domain.ts';
-import type { AppData, WorkSession } from './types.ts';
+import type { AppData, TimerPanelPreferences, WorkSession } from './types.ts';
 
 const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v => v >= '1970-01-01' && v <= '2100-12-31' && dateKey(localDate(v)) === v, 'Invalid date');
 const id = z.string().min(1);
@@ -45,6 +45,15 @@ const v3Schema = z.object({ schemaVersion: z.literal(3), ...legacyShape, profile
 const username = z.string().transform(value => value.trim().replace(/^@/, '').toLowerCase())
   .refine(value => value === '' || /^[a-z0-9_]{3,24}$/.test(value), 'Username needs 3–24 letters, digits, or underscores.');
 const soundPreferences = z.object({ interfaceSounds: z.boolean(), timerAlarm: z.boolean() });
+const defaultTimerPanel: TimerPanelPreferences = { image: null, imageOpacity: 30, imageBlur: 0, preferredWidth: 640, preferredHeight: null };
+const timerPanel = z.object({
+  image: image.default(null),
+  imageOpacity: z.number().min(0).max(100).default(30),
+  imageBlur: z.number().min(0).max(24).default(0),
+  preferredWidth: z.number().int().min(420).max(1280).default(640),
+  preferredHeight: z.number().int().min(400).max(760).nullable().default(null),
+}).default(defaultTimerPanel);
+const onboarding = z.object({ usernamePromptCompleted: z.boolean().default(false) }).default({ usernamePromptCompleted: false });
 const v4Session = v3Session.extend({
   timing: z.enum(['intervals', 'duration']).default('intervals'),
   intervals: z.array(interval),
@@ -56,6 +65,10 @@ const v4Session = v3Session.extend({
 const v4Schema = z.object({ schemaVersion: z.literal(4), ...legacyShape,
   profile: profileV3.extend({ username: username.default('') }), sessions: z.array(v4Session), timer: v3Timer.nullable(),
   preferences: soundPreferences.default({ interfaceSounds: false, timerAlarm: false }) });
+const v5Schema = z.object({ schemaVersion: z.literal(5), ...legacyShape,
+  profile: profileV3.extend({ username: username.default('') }), sessions: z.array(v4Session), timer: v3Timer.nullable(),
+  preferences: soundPreferences.default({ interfaceSounds: false, timerAlarm: false }),
+  timerPanel, onboarding });
 
 const emptyProfile = { name: '', bio: '', avatar: null, banner: null, links: [] } as const;
 
@@ -74,7 +87,7 @@ export function parseBackup(value: unknown): AppData {
   const version = value && typeof value === 'object' ? (value as { schemaVersion?: unknown }).schemaVersion : null;
   const result = version === 1 ? legacySchema.safeParse(value)
     : version === 2 ? v2Schema.safeParse(value)
-      : version === 3 ? v3Schema.safeParse(value) : version === 4 ? v4Schema.safeParse(value) : null;
+      : version === 3 ? v3Schema.safeParse(value) : version === 4 ? v4Schema.safeParse(value) : version === 5 ? v5Schema.safeParse(value) : null;
   if (!result) throw new Error('Invalid backup: unsupported schema version.');
   if (!result.success) invalidBackup(result);
 
@@ -91,9 +104,12 @@ export function parseBackup(value: unknown): AppData {
     ...raw.timer,
     campaignId: Number(version) >= 3 && raw.timer.campaignId !== undefined ? raw.timer.campaignId : legacyCampaignId(raw.timer, raw.occurrences, raw.quests),
   } : null;
+  const migratedOnboarding = version === 5 ? raw.onboarding : { usernamePromptCompleted: Boolean(profile.username) };
   const data = {
-    ...raw, schemaVersion: 4, setupComplete: true, theme: raw.theme === 'white' ? 'white' : 'black',
+    ...raw, schemaVersion: 5, setupComplete: true, theme: raw.theme === 'white' ? 'white' : 'black',
     preferences: raw.preferences ?? { interfaceSounds: false, timerAlarm: false },
+    timerPanel: raw.timerPanel ?? defaultTimerPanel,
+    onboarding: { ...migratedOnboarding, usernamePromptCompleted: Boolean(migratedOnboarding?.usernamePromptCompleted || profile.username) },
     profile: { ...profile, username: profile.username ?? '' }, sessions, timer: timerData,
   } as AppData;
 

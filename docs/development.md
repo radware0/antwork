@@ -29,7 +29,7 @@ The production app is [antwork-five.vercel.app](https://antwork-five.vercel.app/
 
 The project uses the Other framework preset, the repository root, Node.js 22.x, `npm ci` for installation, `npm run build` for the build, and `dist` for output. `vercel.json` records the build settings and `package.json` pins the Node major version. No environment variables are required.
 
-The app uses hash routes, so each app destination remains under the root page; generated documentation is served under `/docs/`. After a release, verify the production deployment matches the pushed commit and smoke-test all five destinations, `/docs/`, and a deeper docs page. The browser workflow accepts `QA_BASE_URL` to test the live URL in a fresh browser context.
+The app uses hash routes, so each app destination remains under the root page; generated documentation is served under `/docs/`. After a release, verify the production deployment matches the pushed commit and smoke-test all five destinations, `/docs/`, and a deeper docs page. The browser workflow accepts `QA_BASE_URL` to test the live URL in a fresh browser context. JSON backups now use schema version 5; this build imports versions 1–5. Older builds cannot read version-5 backups, so keep an up-to-date copy before moving data between app versions.
 
 Browser storage is tied to a site origin. History saved at localhost will not magically appear on the Vercel domain: export JSON in Profile, then import it on the deployed origin if you want that copy there. Do not publish a real backup to the repository.
 
