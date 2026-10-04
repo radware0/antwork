@@ -24,4 +24,4 @@ The design changes above happened before this repository's first public beta com
 
 As of October 4, 2026, the next beta work is to test the flow across five pages with willing users and fix confusing behavior. A hosted version would need decisions about accounts, data protection, recovery, and ways to limit abuse before personal content moves off the device.
 
-For the detailed design record, see [Decision history](docs/decisions.md). For current behavior and future ideas, see [Features and rules](docs/features.md) and the [Roadmap](docs/roadmap.md).
+For the detailed design record, see [Decision history](decisions.md). For current behavior and future ideas, see [Features and rules](features.md) and the [Roadmap](roadmap.md).

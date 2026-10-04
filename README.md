@@ -4,7 +4,7 @@ antwork makes flexible deep work visible. Start a lock-in, save honest work hour
 
 Try the beta at [antwork-five.vercel.app](https://antwork-five.vercel.app/).
 
-Read the [project story and progress](JOURNEY.md), written for this repository.
+Read the [project story and progress](docs/JOURNEY.md), written for this repository.
 
 ## Run locally
 
