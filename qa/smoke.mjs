@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { mkdir } from 'node:fs/promises';
 import { chromium } from 'playwright-core';
 import { checkDockInteractions } from './dock-checks.mjs';
 import { checkTimerInteractions } from './timer-checks.mjs';
@@ -22,7 +21,6 @@ await page.addInitScript(() => {
 });
 const errors = [];
 page.on('pageerror', error => errors.push(error.message));
-await mkdir('.qa', { recursive: true });
 const base = process.env.QA_BASE_URL ?? 'http://localhost:5173/';
 const dock = page.getByRole('navigation', { name: 'Main navigation' });
 const nav = async name => { await dock.getByRole('button', { name, exact: true }).click(); await page.getByRole('heading', { name, exact: true }).waitFor(); };
@@ -36,7 +34,13 @@ const putData = data => page.evaluate(value => new Promise(resolve => {
 }), data);
 const dialog = name => page.getByRole('dialog', { name, exact: true });
 const noOverflow = async () => assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'horizontal overflow at ' + page.url());
-const capture = async name => { await page.waitForTimeout(220); await page.screenshot({ path: '.qa/' + name + '.png', fullPage: true, animations: 'disabled' }); };
+const screenshot = async name => { if (process.env.QA_SKIP_SCREENSHOTS) return; await page.screenshot({ path: '.qa/' + name + '.png', fullPage: true, animations: 'disabled' }); };
+const capture = async name => { await page.waitForTimeout(220); await screenshot(name); };
+const samplePng = async () => Buffer.from(await page.evaluate(() => {
+  const canvas = document.createElement('canvas'); canvas.width = 240; canvas.height = 240;
+  const context = canvas.getContext('2d'); context.fillStyle = '#5273b8'; context.fillRect(0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/png').split(',')[1];
+}), 'base64');
 
 try {
   await page.goto(base, { waitUntil: 'networkidle' });
@@ -114,11 +118,11 @@ try {
   await profile.waitFor({ state: 'hidden' });
   assert.equal((await readData()).profile.username, 'night_ant');
   await page.getByText('@night_ant', { exact: true }).waitFor();
-  await capture('profile-avatar-source');
+  const profileAvatarPng = await samplePng();
   await page.getByRole('button', { name: 'Edit profile' }).click();
   await profile.getByLabel('Upload profile picture').setInputFiles({ name: 'wrong.gif', mimeType: 'image/gif', buffer: Buffer.from('not an image') });
   await profile.getByRole('alert').waitFor();
-  await profile.getByLabel('Upload profile picture').setInputFiles('.qa/profile-avatar-source.png');
+  await profile.getByLabel('Upload profile picture').setInputFiles({ name: 'profile-avatar.png', mimeType: 'image/png', buffer: profileAvatarPng });
   const avatarCrop = profile.getByRole('img', { name: /Crop profile picture/ });
   await avatarCrop.waitFor();
   assert.equal(await profile.locator('.profile-crop-grid').count(), 1);
@@ -130,10 +134,10 @@ try {
   await profile.getByRole('button', { name: 'Apply crop' }).click();
   await profile.locator('.profile-editor-avatar img').waitFor();
   const appliedAvatar = await profile.locator('.profile-editor-avatar img').getAttribute('src');
-  await profile.getByLabel('Upload profile picture').setInputFiles('.qa/profile-avatar-source.png');
+  await profile.getByLabel('Upload profile picture').setInputFiles({ name: 'profile-avatar.png', mimeType: 'image/png', buffer: profileAvatarPng });
   await profile.getByRole('button', { name: 'Cancel crop' }).click();
   assert.equal(await profile.locator('.profile-editor-avatar img').getAttribute('src'), appliedAvatar, 'cancel crop preserves the previous draft image');
-  await profile.getByLabel('Upload banner').setInputFiles('.qa/profile-avatar-source.png');
+  await profile.getByLabel('Upload banner').setInputFiles({ name: 'profile-banner.png', mimeType: 'image/png', buffer: profileAvatarPng });
   await profile.getByRole('img', { name: /Crop banner/ }).waitFor();
   assert.equal(await profile.getByRole('img', { name: 'Desktop banner preview' }).count(), 1);
   assert.equal(await profile.getByRole('img', { name: 'Mobile banner preview' }).count(), 1);
@@ -210,7 +214,7 @@ try {
   await customizeTimer.waitFor();
   await customizeTimer.getByLabel(/Upload image/).setInputFiles({ name: 'wrong.gif', mimeType: 'image/gif', buffer: Buffer.from('not an image') });
   await customizeTimer.getByRole('alert').waitFor();
-  await customizeTimer.getByLabel(/Upload image/).setInputFiles('.qa/profile-avatar-source.png');
+  await customizeTimer.getByLabel(/Upload image/).setInputFiles({ name: 'timer-background.png', mimeType: 'image/png', buffer: profileAvatarPng });
   await customizeTimer.locator('.timer-custom-preview-image').waitFor();
   const opacity = customizeTimer.getByRole('slider', { name: 'Image opacity' });
   await opacity.evaluate((input, value) => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, value); input.dispatchEvent(new Event('input', { bubbles: true })); }, '46');
@@ -378,7 +382,7 @@ try {
         await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
         assert.ok(await page.evaluate(() => document.querySelector('.page-transition').getBoundingClientRect().bottom < document.querySelector('.floating-nav').getBoundingClientRect().top), 'dock clears final page content');
         await page.evaluate(() => scrollTo(0, 0));
-        if (!process.env.QA_SKIP_SCREENSHOTS) await capture(name.toLowerCase().replace(' ', '-') + '-' + theme + '-' + width);
+        await capture(name.toLowerCase().replace(' ', '-') + '-' + theme + '-' + width);
       }
     }
   }
@@ -493,5 +497,5 @@ try {
   assert.ok(await docs.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
   await docs.close();
   console.log(JSON.stringify({ result: 'pass', themes: 2, viewports: 4, pages: 5, errors }));
-} catch (error) { await page.screenshot({ path: '.qa/failure.png', fullPage: true }); throw error; }
+} catch (error) { await screenshot('failure'); throw error; }
 finally { await browser.close(); }

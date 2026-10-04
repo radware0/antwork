@@ -380,6 +380,9 @@
 .timer-panel .panel-heading { min-width: 0; }
 .timer-panel .panel-heading > span { margin-left: auto; }
 .timer-customize-button { min-width: 32px; width: 32px; height: 32px; min-height: 32px; padding: 0; }
+.timer-panel .icon-button { border: 0; background: transparent; box-shadow: none; color: var(--muted); }
+.timer-panel .icon-button:hover { background: transparent; color: var(--text); }
+.timer-panel .timer-setup > .field, .timer-panel-content > .timer-campaign-select { align-self: center; width: fit-content; max-width: 100%; margin-inline: auto; text-align: left; }
 .timer-panel-backdrop { position: absolute; z-index: 0; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
 .timer-panel-image, .timer-custom-preview-image { position: absolute; inset: -24px; width: calc(100% + 48px); height: calc(100% + 48px); object-fit: cover; pointer-events: none; }
 .timer-panel-contrast { position: absolute; inset: 0; background: rgba(0, 0, 0, .55); pointer-events: none; }
