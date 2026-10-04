@@ -4,6 +4,8 @@ antwork makes flexible deep work visible. Start a lock-in, save honest work hour
 
 Try the beta at [antwork-five.vercel.app](https://antwork-five.vercel.app/).
 
+Read the [project story and progress](JOURNEY.md), written for this repository.
+
 ## Run locally
 
 Use Node.js 22.x (22.18 or newer) and run `npm ci`, then `npm run dev`. Open `http://localhost:5173`. On Windows PowerShell, use `npm.cmd` if `npm` is blocked by execution policy.
