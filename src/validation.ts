@@ -68,7 +68,9 @@ const v4Schema = z.object({ schemaVersion: z.literal(4), ...legacyShape,
 const v5Schema = z.object({ schemaVersion: z.literal(5), ...legacyShape,
   profile: profileV3.extend({ username: username.default('') }), sessions: z.array(v4Session), timer: v3Timer.nullable(),
   preferences: soundPreferences.default({ interfaceSounds: false, timerAlarm: false }),
-  timerPanel, onboarding });
+  timerPanel, onboarding,
+  dailyRatings: z.record(day, z.enum(['good', 'steady', 'rough'])).default({}),
+  calendarMode: z.enum(['quality', 'hours']).default('quality') });
 
 const emptyProfile = { name: '', bio: '', avatar: null, banner: null, links: [] } as const;
 
@@ -109,6 +111,8 @@ export function parseBackup(value: unknown): AppData {
     ...raw, schemaVersion: 5, setupComplete: true, theme: raw.theme === 'white' ? 'white' : 'black',
     preferences: raw.preferences ?? { interfaceSounds: false, timerAlarm: false },
     timerPanel: raw.timerPanel ?? defaultTimerPanel,
+    dailyRatings: raw.dailyRatings ?? {},
+    calendarMode: raw.calendarMode ?? 'quality',
     onboarding: { ...migratedOnboarding, usernamePromptCompleted: Boolean(migratedOnboarding?.usernamePromptCompleted || profile.username) },
     profile: { ...profile, username: profile.username ?? '' }, sessions, timer: timerData,
   } as AppData;

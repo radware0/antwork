@@ -1,4 +1,4 @@
-import type { ActiveTimer, AppData, DateKey, Interval, Quest, QuestOccurrence, WorkSession } from './types.ts';
+import type { ActiveTimer, AppData, DateKey, DayQuality, Interval, Quest, QuestOccurrence, WorkSession } from './types.ts';
 
 export function dateKey(value: Date | number = new Date()): DateKey {
   const date = typeof value === 'number' ? new Date(value) : value;
@@ -111,6 +111,8 @@ export function createInitialData(setupDate: DateKey): AppData {
     setupComplete: true,
     weeklyTargets: [0, 4, 4, 4, 4, 4, 0],
     dailyTargets: {},
+    dailyRatings: {},
+    calendarMode: 'quality',
     theme: 'black',
     preferences: { interfaceSounds: true, timerAlarm: true },
     timerPanel: { image: null, imageOpacity: 30, imageBlur: 0, preferredWidth: 640, preferredHeight: null },
@@ -124,6 +126,14 @@ export function createInitialData(setupDate: DateKey): AppData {
     timer: null,
     pendingReviewId: null,
   };
+}
+
+export function setDayRating(data: AppData, day: DateKey, rating: DayQuality | null, now: number): AppData {
+  if (day > dateKey(now)) throw new Error('Future days cannot be rated.');
+  const dailyRatings = { ...data.dailyRatings };
+  if (rating === null) delete dailyRatings[day];
+  else dailyRatings[day] = rating;
+  return { ...data, dailyRatings };
 }
 
 export function freezePastTargets(data: AppData, today: DateKey): AppData {

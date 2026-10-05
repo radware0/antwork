@@ -18,7 +18,9 @@ Score is one point for every 15 cumulative minutes of **saved** deep work. It is
 
 ## Calendar and career
 
-Worked days show their hours and a green treatment. Past days with no logged work and future days remain neutral. There is no daily target or target difference in the current interface. Dashboard dates cannot be edited; Calendar dates select a day for session and journal review.
+The calendar defaults to **Day quality**: Good is green, Steady is yellow, and Rough is red. Calendar cells show quality through color, with the date and work hours visible. These are manual whole-day ratings, independent of hours and session ratings. Unrated days stay neutral. Select today or a past day in Calendar to set, change, or clear its rating above the journal, including days with no work. Future dates stay blank and cannot be rated. Dashboard dates remain view-only.
+
+Switch to **Hours** for green shading based on time: under 2 hours is light, 2 to under 4 hours is medium, and 4 or more hours is dark. Zero hours stays neutral. The toggle is shared between Dashboard and Calendar and remembered on this device. Switching views preserves hours, ratings, and notes. There is no daily target or target difference in either view.
 
 Profile shows total saved deep work, best saved day by hours, longest saved session, most saved hours linked to one campaign, and lifetime Score. A live status shows an active or paused session before reverting to today's recorded work. The identity editor holds a display name, local @username, bio, links, avatar, and banner. Image uploads are cropped locally to static WebP; only Save profile persists a draft. New workspaces ask once for a username after local history loads; Skip, Close, and Escape complete the prompt without a handle. Existing usernames skip onboarding. Handles remain local and have no registration or availability check. Campaigns need a title but may have no description.
 

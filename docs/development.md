@@ -17,9 +17,12 @@ Open `http://localhost:5173`. On Windows PowerShell, use `npm.cmd` if script exe
 npm test
 npm run build
 npm run test:browser
+npm run test:calendar
 ```
 
 Start the development server before `test:browser`. The browser workflow uses Chromium through Playwright; install that browser if your machine does not already have it (`npm exec -- playwright install chromium`). The tests cover time calculations, backup migrations, the daily loop, dialogs, responsive navigation, and more. A build writes the static app and generated documentation to `dist/`.
+
+The focused `test:calendar` workflow checks daily ratings, both display modes, saved preferences, and desktop/mobile layouts in an isolated browser context. It uses installed Chromium, Chrome, or Edge; `QA_BROWSER_PATH` can select another browser executable.
 
 ## Publish the beta
 

@@ -10,7 +10,8 @@
     "dev": "node scripts/app.mjs",
     "build": "tsc -b && node scripts/app.mjs --build",
     "test": "node --experimental-strip-types --test",
-    "test:browser": "node qa/smoke.mjs"
+    "test:browser": "node qa/smoke.mjs",
+    "test:calendar": "node --experimental-strip-types qa/calendar-checks.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

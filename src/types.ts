@@ -4,6 +4,8 @@ export type Theme = 'white' | 'black';
 export type Recurrence = 'none' | 'daily' | 'weekly';
 export type Stake = 5 | 10 | 20;
 export type SessionResult = 'strong' | 'steady' | 'rough';
+export type DayQuality = 'good' | 'steady' | 'rough';
+export type CalendarMode = 'quality' | 'hours';
 
 export interface Campaign {
   id: string;
@@ -95,6 +97,8 @@ export interface AppData {
   setupComplete: boolean;
   weeklyTargets: number[];
   dailyTargets: Record<DateKey, number>;
+  dailyRatings: Record<DateKey, DayQuality>;
+  calendarMode: CalendarMode;
   theme: Theme;
   preferences: SoundPreferences;
   timerPanel: TimerPanelPreferences;

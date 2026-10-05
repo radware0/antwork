@@ -1,5 +1,5 @@
 import { dateKey, dailyWorkedMinutes, localDate, timerElapsedMs, sessionDurationMs } from './domain.ts';
-import type { AppData, DateKey, WorkSession } from './types.ts';
+import type { AppData, DateKey, DayQuality, WorkSession } from './types.ts';
 
 export type Mutate = (change: (data: AppData) => AppData) => Promise<AppData>;
 
@@ -51,6 +51,18 @@ export function dailySummary(data: AppData, day: DateKey, now: number) {
   const minutes = dailyWorkedMinutes(withLiveSession(data, now), day);
   const color = day > dateKey(now) || minutes === 0 ? 'neutral' : 'positive';
   return { minutes, color };
+}
+
+export const dayQualityLabels: Record<DayQuality, string> = { good: 'Good', steady: 'Steady', rough: 'Rough' };
+
+export function calendarSummary(data: AppData, day: DateKey, now: number) {
+  const { minutes } = dailySummary(data, day, now);
+  const future = day > dateKey(now);
+  const rating = future ? null : data.dailyRatings[day] ?? null;
+  const color = future ? 'neutral' : data.calendarMode === 'quality'
+    ? rating ? 'quality-' + rating : 'neutral'
+    : minutes === 0 ? 'neutral' : minutes < 120 ? 'hours-light' : minutes < 240 ? 'hours-medium' : 'hours-dark';
+  return { minutes, future, rating, color, ratingLabel: rating ? dayQualityLabels[rating] : 'Unrated' };
 }
 
 export function timerLeft(data: AppData, now: number): number {

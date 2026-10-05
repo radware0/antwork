@@ -14,7 +14,7 @@ The review is where you may connect the session to a campaign, rate how it felt,
 
 ## Reflect and review
 
-The journal holds one private note per day. Saved text is readable on Dashboard and Calendar; **Edit** opens the note without altering it until Save changes succeeds. Calendar day detail shows the day's sessions and note. Work Hours shows a 30-day chart and a match-style history.
+The journal holds one private note per day. Saved text is readable on Dashboard and Calendar; **Edit** opens the note without altering it until Save changes succeeds. Calendar day detail shows the day's sessions and note. Above the journal, rate the whole day Good, Steady, or Rough independently of work hours. Ratings can be changed or cleared for today and past days. Switch the calendar between Day quality and Hours; it remembers your choice. Work Hours shows a 30-day chart and a match-style history.
 
 ## Keep your own copy
 
