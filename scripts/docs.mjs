@@ -26,7 +26,7 @@ export async function buildDocs({ sourceDir = join(projectRoot, 'docs'), outputD
     const body = markdown.render(source);
     const navigation = pages.map(item => `<a href="${href(item.slug)}"${item.slug === page.slug ? ' aria-current="page"' : ''}>${escape(item.title)}</a>`).join('');
     const html = `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark light"><title>${escape(page.title)} | antwork docs</title><link rel="stylesheet" href="/docs/docs.css"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark light"><title>${escape(page.title)} | antwork docs</title><script src="/docs/theme.js"></script><link rel="stylesheet" href="/docs/docs.css"></head>
 <body><a class="skip-link" href="#content">Skip to content</a><div class="docs-shell">
 <header class="docs-header"><a class="docs-brand" href="/docs/" aria-label="antwork documentation home"><span class="docs-mark">a</span><span>antwork <small>docs</small></span></a><a class="app-link" href="${desktop ? '/#dashboard' : '/'}">${desktop ? 'Open app' : 'Home'}</a></header>
 <div class="docs-layout"><nav class="docs-nav" aria-label="Documentation">${navigation}</nav><main id="content" class="docs-content"><article class="docs-prose">${body}</article><p class="docs-footer">antwork 2026. Your work history stays on your computer until you export it.</p></main></div>

@@ -1,8 +1,8 @@
 @font-face { font-family: Rubik; src: url('/fonts/rubik-latin-400-normal.woff2') format('woff2'); font-weight: 400; font-display: swap; }
 @font-face { font-family: Rubik; src: url('/fonts/rubik-latin-500-normal.woff2') format('woff2'); font-weight: 500; font-display: swap; }
 @font-face { font-family: Rubik; src: url('/fonts/rubik-latin-600-normal.woff2') format('woff2'); font-weight: 600; font-display: swap; }
-:root { font-family: Rubik, sans-serif; color-scheme: light; --bg: #f3f5f7; --surface: #fff; --surface-2: #f8fafb; --border: #d9dee5; --text: #18202b; --muted: #667386; --accent: #2868ae; --active: rgba(49,116,196,.12); --code: #edf1f5; }
-@media (prefers-color-scheme: dark) { :root { color-scheme: dark; --bg: #0b0d11; --surface: #15171d; --surface-2: #191c23; --border: #2a2e38; --text: #f0f2f6; --muted: #a9b2c0; --accent: #8db8ff; --active: rgba(84,137,226,.13); --code: #20242c; } }
+:root { font-family: Rubik, sans-serif; color-scheme: dark; --bg: #050608; --surface: #0d0f12; --surface-2: #111317; --border: #292b31; --text: #f4f5f7; --muted: #a0a6b2; --accent: #76a9ff; --active: rgba(84,137,226,.12); --code: #111317; }
+:root[data-theme="white"] { color-scheme: light; --bg: #fafafa; --surface: #fff; --surface-2: #fafafa; --border: #e1e1e5; --text: #18181b; --muted: #62626b; --accent: #2868ae; --active: rgba(49,116,196,.12); --code: #f2f2f3; }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); }
 a { color: var(--accent); text-underline-offset: 3px; }

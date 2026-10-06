@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ArrowUpRight } from 'lucide-react';
 import { LiquidThemeToggle } from './components/ui/liquid-theme-toggle.tsx';
@@ -13,6 +13,18 @@ function readTheme(): 'black' | 'white' {
 function DownloadPage() {
   const [theme, setTheme] = useState(readTheme);
   useLayoutEffect(() => { document.documentElement.dataset.theme = theme; }, [theme]);
+  useEffect(() => {
+    const syncTheme = () => setTheme(readTheme());
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === 'antwork-site-theme' || event.key === null) syncTheme();
+    };
+    window.addEventListener('pageshow', syncTheme);
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener('pageshow', syncTheme);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
   const switchTheme = async (next: 'light' | 'dark') => {
     const value = next === 'light' ? 'white' : 'black';
     setTheme(value);

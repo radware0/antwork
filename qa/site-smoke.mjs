@@ -82,14 +82,35 @@ try {
       await page.screenshot({ path: `.qa/site-${appearance}-${viewport.width}.png`, fullPage: true });
     }
   }
-  await page.getByRole('link', { name: 'Docs', exact: true }).click();
-  await page.getByRole('heading', { level: 1 }).waitFor();
-  assert.equal(await page.getByRole('link', { name: 'Home', exact: true }).getAttribute('href'), '/');
-  const response = await page.goto(new URL('/docs/windows/', base).href);
-  assert.equal(response.status(), 200);
-  await page.getByRole('heading', { name: 'Windows app', exact: true }).waitFor();
+  const colors = {};
+  for (const appearance of ['black', 'white']) {
+    await page.goto(base, { waitUntil: 'networkidle' });
+    if (await page.evaluate(() => document.documentElement.dataset.theme) !== appearance) await theme.click();
+    await page.waitForFunction(value => document.documentElement.dataset.theme === value, appearance);
+    colors[appearance] = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+    await page.emulateMedia({ colorScheme: appearance === 'white' ? 'dark' : 'light' });
+    await page.getByRole('link', { name: 'Docs', exact: true }).click();
+    await page.getByRole('heading', { level: 1 }).waitFor();
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), appearance, 'Docs follows the site theme even when the system uses the opposite theme');
+    assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), colors[appearance]);
+    assert.equal(await page.getByRole('link', { name: 'Home', exact: true }).getAttribute('href'), '/');
+    await page.getByRole('navigation', { name: 'Documentation' }).getByRole('link', { name: 'Windows app', exact: true }).click();
+    await page.getByRole('heading', { name: 'Windows app', exact: true }).waitFor();
+    await page.reload({ waitUntil: 'networkidle' });
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), appearance, 'Docs navigation and reload preserve the theme');
+    await page.screenshot({ path: `.qa/docs-${appearance}.png`, fullPage: true });
+    await page.getByRole('link', { name: 'Home', exact: true }).click();
+    await checkPage();
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), appearance);
+  }
+  const docsTab = await context.newPage();
+  await docsTab.goto(new URL('/docs/', base).href, { waitUntil: 'networkidle' });
+  await theme.click();
+  await docsTab.waitForFunction(() => document.documentElement.dataset.theme === 'black');
+  assert.equal(await docsTab.evaluate(() => getComputedStyle(document.body).backgroundColor), colors.black, 'Open Docs tabs update when the site theme changes');
+  await docsTab.close();
   assert.deepEqual(errors, []);
-  console.log(`Download page, both themes, keyboard toggle, responsive layout, preserved history, and Docs passed: ${base}`);
+  console.log(`Download page, both themes, keyboard toggle, responsive layout, preserved history, and Docs theme synchronization passed: ${base}`);
 } finally {
   await browser.close();
 }
