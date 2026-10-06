@@ -1,7 +1,12 @@
 node_modules/
 dist/
+desktop-dist/
+out/
+release/windows/out/
+release/windows/app/
 .superpowers/
 .qa/
+.firecrawl/
 *.tsbuildinfo
 .env
 .env.*

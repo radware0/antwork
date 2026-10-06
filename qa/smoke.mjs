@@ -53,19 +53,7 @@ try {
   assert.equal(await page.getByRole('switch', { name: 'Dark appearance', exact: true }).count(), 1);
   assert.deepEqual((await readData()).preferences, { interfaceSounds: true, timerAlarm: true });
   assert.equal(await page.evaluate(() => window.qaSounds.length), 0);
-  const usernamePrompt = dialog('Pick your handle');
-  await usernamePrompt.waitFor();
-  await usernamePrompt.getByLabel('Username').fill('ab');
-  await usernamePrompt.getByRole('button', { name: 'Save handle' }).click();
-  await usernamePrompt.getByRole('alert').waitFor();
-  await usernamePrompt.getByLabel('Username').fill('@first_ant');
-  await usernamePrompt.getByRole('button', { name: 'Save handle' }).click();
-  await usernamePrompt.waitFor({ state: 'hidden' });
-  assert.equal((await readData()).profile.username, 'first_ant');
-  assert.deepEqual((await readData()).onboarding, { usernamePromptCompleted: true });
-  await page.reload({ waitUntil: 'networkidle' });
-  await page.getByRole('heading', { name: 'Dashboard', exact: true }).waitFor();
-  assert.equal(await usernamePrompt.count(), 0, 'saved handle prevents another onboarding prompt');
+  assert.equal(await dialog('Pick your handle').count(), 0, 'Handle onboarding is deprecated');
   await checkThemeInteractions(page, readData);
   assert.equal(await page.getByRole('link', { name: 'Docs' }).count(), 1);
   assert.equal(await page.getByRole('button', { name: 'Mute sounds' }).count(), 1);
@@ -97,103 +85,12 @@ try {
   await dialog('Session complete').waitFor({ state: 'hidden' });
 
   await nav('Profile');
-  await page.getByRole('button', { name: 'Edit profile' }).click();
-  const profile = dialog('Edit profile');
-  await profile.getByLabel('Display name').fill('Discard');
-  await profile.getByRole('button', { name: 'Close edit profile' }).focus();
-  await page.keyboard.press('Shift+Tab');
-  assert.equal(await profile.getByRole('button', { name: 'Cancel', exact: true }).evaluate(el => el === document.activeElement), true);
-  await page.keyboard.press('Tab');
-  assert.equal(await profile.getByRole('button', { name: 'Close edit profile' }).evaluate(el => el === document.activeElement), true);
-  await page.keyboard.press('Escape'); await profile.waitFor({ state: 'hidden' });
-  assert.equal(await page.getByRole('button', { name: 'Edit profile' }).evaluate(button => button === document.activeElement), true);
-  await page.getByRole('button', { name: 'Edit profile' }).click();
-  await profile.getByLabel('Display name').fill('Night Ant');
-  await profile.getByLabel('Username').fill('bad handle');
-  await profile.getByRole('button', { name: 'Save profile' }).click();
-  await profile.getByRole('alert').waitFor();
-  await profile.getByLabel('Username').fill('@Night_Ant');
-  await profile.getByLabel('Bio').fill('Keep showing up. '.repeat(12));
-  await profile.getByRole('button', { name: 'Save profile' }).click();
-  await profile.waitFor({ state: 'hidden' });
-  assert.equal((await readData()).profile.username, 'night_ant');
-  await page.getByText('@night_ant', { exact: true }).waitFor();
+  await page.getByRole('heading', { name: 'Career overview' }).waitFor();
+  assert.equal(await page.getByRole('button', { name: 'Edit profile' }).count(), 0);
+  assert.equal(await page.locator('.identity-panel').count(), 0);
+  const retained = await readData();
+  await putData({ ...retained, profile: { ...retained.profile, name: 'Night Ant', username: 'night_ant', bio: 'Keep showing up.' } });
   const profileAvatarPng = await samplePng();
-  await page.getByRole('button', { name: 'Edit profile' }).click();
-  await profile.getByLabel('Upload profile picture').setInputFiles({ name: 'wrong.gif', mimeType: 'image/gif', buffer: Buffer.from('not an image') });
-  await profile.getByRole('alert').waitFor();
-  await profile.getByLabel('Upload profile picture').setInputFiles({ name: 'profile-avatar.png', mimeType: 'image/png', buffer: profileAvatarPng });
-  const avatarCrop = profile.getByRole('img', { name: /Crop profile picture/ });
-  await avatarCrop.waitFor();
-  assert.equal(await profile.locator('.profile-crop-grid').count(), 1);
-  assert.equal(await profile.locator('.profile-crop-grid i').count(), 4);
-  assert.equal(await profile.getByRole('img', { name: 'Circular profile picture preview' }).count(), 1);
-  await avatarCrop.focus();
-  await page.keyboard.press('ArrowRight');
-  await profile.getByLabel('Zoom').fill('1.5');
-  await profile.getByRole('button', { name: 'Apply crop' }).click();
-  await profile.locator('.profile-editor-avatar img').waitFor();
-  const appliedAvatar = await profile.locator('.profile-editor-avatar img').getAttribute('src');
-  await profile.getByLabel('Upload profile picture').setInputFiles({ name: 'profile-avatar.png', mimeType: 'image/png', buffer: profileAvatarPng });
-  await profile.getByRole('button', { name: 'Cancel crop' }).click();
-  assert.equal(await profile.locator('.profile-editor-avatar img').getAttribute('src'), appliedAvatar, 'cancel crop preserves the previous draft image');
-  await profile.getByLabel('Upload banner').setInputFiles({ name: 'profile-banner.png', mimeType: 'image/png', buffer: profileAvatarPng });
-  await profile.getByRole('img', { name: /Crop banner/ }).waitFor();
-  assert.equal(await profile.getByRole('img', { name: 'Desktop banner preview' }).count(), 1);
-  assert.equal(await profile.getByRole('img', { name: 'Mobile banner preview' }).count(), 1);
-  await page.setViewportSize({ width: 1100, height: 820 });
-  await page.waitForFunction(() => {
-    const frame = document.querySelector('.profile-banner')?.getBoundingClientRect();
-    const preview = document.querySelector('canvas[aria-label="Desktop banner preview"]');
-    return frame && preview && Math.abs(frame.width / frame.height - preview.width / preview.height) < 0.04;
-  });
-  const actualBannerRatio = await page.locator('.profile-banner').evaluate(frame => {
-    const rect = frame.getBoundingClientRect();
-    return rect.width / rect.height;
-  });
-  const cropBannerRatio = await profile.getByRole('img', { name: 'Desktop banner preview' }).evaluate(canvas => canvas.width / canvas.height);
-  assert.ok(Math.abs(actualBannerRatio - cropBannerRatio) < 0.04, `crop desktop preview matches the actual banner at an intermediate width (${actualBannerRatio} vs ${cropBannerRatio})`);
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.waitForFunction(() => {
-    const frame = document.querySelector('.profile-banner')?.getBoundingClientRect();
-    const preview = document.querySelector('canvas[aria-label="Mobile banner preview"]');
-    return frame && preview && Math.abs(frame.width / frame.height - preview.width / preview.height) < 0.04;
-  });
-  await page.setViewportSize({ width: 1100, height: 820 });
-  await page.waitForFunction(() => {
-    const frame = document.querySelector('.profile-banner')?.getBoundingClientRect();
-    const preview = document.querySelector('canvas[aria-label="Desktop banner preview"]');
-    return frame && preview && Math.abs(frame.width / frame.height - preview.width / preview.height) < 0.04;
-  });
-  await profile.getByRole('button', { name: 'Apply crop' }).click();
-  await profile.locator('.profile-editor-banner.preview-desktop img').waitFor();
-  await profile.locator('.profile-editor-banner.preview-mobile img').waitFor();
-  const draftBannerRatio = await profile.locator('.profile-editor-banner.preview-desktop').evaluate(frame => {
-    const rect = frame.getBoundingClientRect();
-    return rect.width / rect.height;
-  });
-  assert.ok(Math.abs(actualBannerRatio - draftBannerRatio) < 0.04, 'draft desktop preview matches the actual banner at an intermediate width');
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.waitForFunction(() => {
-    const frame = document.querySelector('.profile-banner')?.getBoundingClientRect();
-    const draft = document.querySelector('.profile-editor-banner.preview-mobile')?.getBoundingClientRect();
-    return frame && draft && Math.abs(frame.width / frame.height - draft.width / draft.height) < 0.04;
-  });
-  await page.setViewportSize({ width: 1440, height: 900 });
-  assert.ok(await profile.locator('.profile-editor-banner.preview-desktop').evaluate(frame => {
-    const outer = frame.getBoundingClientRect();
-    const image = frame.querySelector('img').getBoundingClientRect();
-    return Math.abs(outer.width - image.width) < 3 && Math.abs(outer.height - image.height) < 3;
-  }), 'draft image must fill the actual desktop banner frame');
-  assert.equal(await profile.locator('.scales-pattern').count(), 0);
-  await profile.getByRole('button', { name: 'Save profile' }).click(); await profile.waitFor({ state: 'hidden' });
-  assert.equal(await page.locator('.profile-avatar').evaluate(el => getComputedStyle(el).borderRadius), '50%');
-  await page.getByRole('button', { name: 'Edit profile' }).click();
-  await profile.getByRole('button', { name: 'Remove picture' }).click();
-  await profile.getByRole('button', { name: 'Remove banner' }).click();
-  await profile.getByRole('button', { name: 'Save profile' }).click(); await profile.waitFor({ state: 'hidden' });
-  assert.equal(await page.locator('.profile-banner .scales-pattern').count(), 1);
-  assert.equal(await page.locator('.profile-avatar [data-slot="avatar-fallback"]').count(), 1);
   await page.getByRole('button', { name: 'Create campaign', exact: true }).click();
   const campaign = dialog('Create campaign');
   await campaign.getByLabel('Title', { exact: true }).fill('Build a useful app');
@@ -415,9 +312,7 @@ try {
   await touchPage.goto(base, { waitUntil: 'networkidle' });
   await touchPage.getByRole('heading', { name: 'Dashboard', exact: true }).waitFor();
   assert.equal(await touchPage.evaluate(() => matchMedia('(hover: none)').matches), true);
-  const touchPrompt = touchPage.getByRole('dialog', { name: 'Pick your handle', exact: true });
-  await touchPrompt.getByRole('button', { name: 'Skip for now' }).click();
-  await touchPrompt.waitFor({ state: 'hidden' });
+  assert.equal(await touchPage.getByRole('dialog', { name: 'Pick your handle' }).count(), 0);
   await checkDockInteractions(touchPage, { staticIcons: true });
   for (const name of ['Dashboard', 'Timers', 'Calendar', 'Work Hours', 'Profile']) {
     const touchButton = touchPage.getByRole('navigation', { name: 'Main navigation' }).getByRole('button', { name, exact: true });
@@ -428,26 +323,7 @@ try {
   }
   await touchContext.close();
 
-  const skipContext = await browser.newContext({ viewport: { width: 1366, height: 768 } });
-  const skipPage = await skipContext.newPage();
-  skipPage.on('pageerror', error => errors.push(error.message));
-  await skipPage.goto(base, { waitUntil: 'networkidle' });
-  await skipPage.getByRole('heading', { name: 'Dashboard', exact: true }).waitFor();
-  const skipPrompt = skipPage.getByRole('dialog', { name: 'Pick your handle', exact: true });
-  await skipPrompt.waitFor();
-  await skipPage.evaluate(() => { window.qaPut = IDBObjectStore.prototype.put; IDBObjectStore.prototype.put = function () { throw new DOMException('Test quota failure', 'QuotaExceededError'); }; });
-  await skipPage.keyboard.press('Escape');
-  await skipPrompt.waitFor({ state: 'hidden' });
-  await skipPage.getByRole('status').filter({ hasText: 'may appear again after reload' }).waitFor();
-  const skippedData = await skipPage.evaluate(() => new Promise(resolve => { const request = indexedDB.open('work-ledger', 1); request.onsuccess = () => { const db = request.result; const get = db.transaction('documents').objectStore('documents').get('current'); get.onsuccess = () => { resolve(get.result); db.close(); }; }; }));
-  assert.equal(skippedData.onboarding.usernamePromptCompleted, false, 'failed skip save does not pretend to persist');
-  await skipPage.evaluate(() => { IDBObjectStore.prototype.put = window.qaPut; });
-  await skipPage.reload({ waitUntil: 'networkidle' });
-  await skipPage.getByRole('dialog', { name: 'Pick your handle', exact: true }).waitFor();
-  await skipPage.getByRole('button', { name: 'Skip for now' }).click();
-  await skipPage.getByRole('dialog', { name: 'Pick your handle', exact: true }).waitFor({ state: 'hidden' });
-  assert.equal((await skipPage.evaluate(() => new Promise(resolve => { const request = indexedDB.open('work-ledger', 1); request.onsuccess = () => { const db = request.result; const get = db.transaction('documents').objectStore('documents').get('current'); get.onsuccess = () => { resolve(get.result); db.close(); }; }; }))).onboarding.usernamePromptCompleted, true);
-  await skipContext.close();
+
 
   await nav('Profile');
   const backup = await readData();

@@ -2,7 +2,7 @@
 
 antwork is a local-first progress tracker for people who like the clarity of a game career screen but want honest, flexible work days. Open it, start a lock-in, keep a note, and see the hours you actually worked. Rest days do not become debts.
 
-This is a public beta of a personal tool, not a validated productivity method. Today it runs entirely in your browser. There are no accounts, cloud sync, public profiles, or server-side work records.
+This is a public beta of a personal tool, not a validated productivity method. It runs locally in your browser; a Windows desktop build is available for personal use. There are no accounts, cloud sync, public profiles, or server-side work records. Read the [Windows app instructions](/docs/windows/) for installation, history transfer, and timer behavior.
 
 ## The question behind it
 

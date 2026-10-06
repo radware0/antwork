@@ -26,3 +26,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 The bundled Rubik font has its own [SIL Open Font License](public/fonts/LICENSE.txt). Apache ECharts is installed from npm under [Apache-2.0](https://github.com/apache/echarts/blob/master/LICENSE).
+
+## Windows desktop runtime
+
+Electron is distributed under the MIT License, Copyright (c) Electron contributors and Copyright (c) 2013-2020 GitHub Inc. Its `LICENSE` and `LICENSES.chromium.html` are retained alongside the packaged executable.
+
+The main-process bundle includes `electron-squirrel-startup` 1.0.1 (Apache-2.0) and its dependencies `debug` 2.6.9 (MIT, Copyright (c) 2014 TJ Holowaychuk) and `ms` 2.0.0 (MIT, Copyright (c) 2016 Zeit, Inc.). Their complete license texts are included in `desktop-dist/licenses/` inside the application package.
+
+The installer and update/uninstall helper use Squirrel.Windows under the MIT License, Copyright (c) 2012 GitHub, Inc. The [upstream license](https://github.com/Squirrel/Squirrel.Windows/blob/develop/COPYING) is preserved in `desktop/assets/Squirrel-COPYING.txt` and bundled as `desktop-dist/licenses/Squirrel.Windows.txt`.

@@ -9,8 +9,8 @@ import { JournalView } from './components/JournalView.tsx';
 import { SessionReview, TimerStatus, TimerView, type TimerPosition } from './components/TimerView.tsx';
 import { HoursChart, WorkHoursView, ManualEntry, SessionHistory } from './components/WorkHoursView.tsx';
 import { ProfileView } from './components/ProfileView.tsx';
-import { UsernamePrompt } from './components/UsernamePrompt.tsx';
 import { LoadingView } from './components/LoadingView.tsx';
+import { WindowControls } from './components/WindowControls.tsx';
 import { SoundProvider } from './SoundContext.tsx';
 import { playInterfaceSound, toggleSoundPreferences } from './sound.ts';
 import { Avatar, AvatarFallback, AvatarImage } from './components/ui/avatar.tsx';
@@ -62,6 +62,7 @@ function Dashboard({ data, now, mutate, month, setMonth, openCalendar, openTimer
 
 export default function App() {
   const reduced = useReducedMotion();
+  const timerPopout = new URLSearchParams(window.location.search).get('timer') === 'popout';
   const { data, error, now, mutate, replace, clearError } = useLedger();
   const [page, setPage] = useState<Page>(readPage);
   const [month, setMonth] = useState<DateKey>(() => dateKey(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
@@ -69,8 +70,6 @@ export default function App() {
   const [timerPosition, setTimerPosition] = useState<TimerPosition>({ x: 0, y: 0 });
   const [soundBusy, setSoundBusy] = useState(false);
   const [themeBusy, setThemeBusy] = useState(false);
-  const [usernamePromptDismissed, setUsernamePromptDismissed] = useState(false);
-  const [usernamePromptWarning, setUsernamePromptWarning] = useState('');
   useEffect(() => {
     const onHash = () => setPage(readPage());
     window.addEventListener('hashchange', onHash);
@@ -79,6 +78,9 @@ export default function App() {
   useEffect(() => {
     if (data) document.documentElement.dataset.theme = data.theme;
   }, [data?.theme]);
+  useEffect(() => {
+    document.title = timerPopout ? 'antwork timer' : 'antwork';
+  }, [timerPopout]);
   const navigate = (next: Page) => {
     playInterfaceSound(Boolean(data?.preferences.interfaceSounds));
     if (next === 'calendar' && page !== 'calendar') {
@@ -88,7 +90,10 @@ export default function App() {
     window.location.hash = next;
     setPage(next);
   };
-  if (!data) return error ? <div className="startup-screen startup-error"><span className="startup-title">antwork</span><p role="alert">Could not open local history.</p><button className="button primary" onClick={() => window.location.reload()}>Reload app</button></div> : <LoadingView />;
+  if (!data) return <>
+    {window.antworkDesktop && <header className="app-topbar desktop-titlebar"><span className="brand">{timerPopout ? 'Work timer' : 'antwork'}</span><WindowControls label={timerPopout ? 'timer window' : 'antwork'} /></header>}
+    {error ? <div className="startup-screen startup-error"><span className="startup-title">antwork</span><p role="alert">Could not open local history.</p><button className="button primary" onClick={() => window.location.reload()}>Reload app</button></div> : <LoadingView />}
+  </>;
 
   const soundOn = data.preferences.interfaceSounds || data.preferences.timerAlarm;
   const toggleSound = async () => {
@@ -114,11 +119,16 @@ export default function App() {
     } finally { setThemeBusy(false); }
   };
 
+  if (timerPopout) return <SoundProvider preferences={data.preferences}><main className="timer-popout">
+    {error && <div className="error-banner" role="alert">{error}<button aria-label="Dismiss error" onClick={clearError}><X size={16} /></button></div>}
+    <TimerView data={data} now={now} mutate={mutate} position={timerPosition} onPositionChange={setTimerPosition} popout />
+    {data.pendingReviewId && <SessionReview key={data.pendingReviewId} data={data} mutate={mutate} />}
+  </main></SoundProvider>;
+
   return <SoundProvider preferences={data.preferences}><div className="app-shell">
-    <header className="app-topbar"><div className="brand"><span className="brand-mark" aria-hidden="true">a</span><span className="brand-name">antwork</span></div><div className="topbar-actions"><LiquidThemeToggle className="topbar-theme" disabled={themeBusy} theme={data.theme === 'white' ? 'light' : 'dark'} onThemeChange={switchTheme} /><a className="topbar-docs" href="/docs/">Docs</a><button type="button" className="icon-button sound-toggle" aria-label={soundOn ? 'Mute sounds' : 'Unmute sounds'} title={soundOn ? 'Mute sounds' : 'Unmute sounds'} aria-pressed={!soundOn} disabled={soundBusy} onClick={() => void toggleSound()}>{soundOn ? <Volume2 size={17} aria-hidden="true" /> : <VolumeX size={17} aria-hidden="true" />}</button></div></header>
+    <header className={'app-topbar' + (window.antworkDesktop ? ' desktop-titlebar' : '')}><div className="brand"><span className="brand-mark" aria-hidden="true">a</span><span className="brand-name">antwork</span></div><div className="topbar-actions"><LiquidThemeToggle className="topbar-theme" disabled={themeBusy} theme={data.theme === 'white' ? 'light' : 'dark'} onThemeChange={switchTheme} /><a className="topbar-docs" href="/docs/" onClick={event => { if (window.antworkDesktop) { event.preventDefault(); window.antworkDesktop.openDocumentation(); } }}>Docs</a><button type="button" className="icon-button sound-toggle" aria-label={soundOn ? 'Mute sounds' : 'Unmute sounds'} title={soundOn ? 'Mute sounds' : 'Unmute sounds'} aria-pressed={!soundOn} disabled={soundBusy} onClick={() => void toggleSound()}>{soundOn ? <Volume2 size={17} aria-hidden="true" /> : <VolumeX size={17} aria-hidden="true" />}</button><WindowControls /></div></header>
     <main className="main-content">
       {error && <div className="error-banner" role="alert">{error}<button aria-label="Dismiss error" onClick={clearError}><X size={16} /></button></div>}
-      {usernamePromptWarning && <p className="muted" role="status">{usernamePromptWarning}</p>}
       <motion.div key={page} initial={{ opacity: 0.65, y: reduced ? 0 : 5 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduced ? 0 : 0.18, ease: [0.23, 1, 0.32, 1] }} className="page-transition">
       {page === 'dashboard' && <Dashboard data={data} now={now} mutate={mutate} month={month} setMonth={setMonth} openCalendar={() => navigate('calendar')} openTimer={() => navigate('timers')} openProfile={() => navigate('profile')} />}
       {page === 'timers' && <div className="page-stack timers-page"><div className="page-title"><div><h1>Timers</h1><p>Start a stopwatch or choose a countdown.</p></div></div><TimerView data={data} now={now} mutate={mutate} position={timerPosition} onPositionChange={setTimerPosition} /> </div>}
@@ -129,6 +139,5 @@ export default function App() {
     </main>
     <FloatingDock items={nav} active={page} onNavigate={navigate} />
     {data.pendingReviewId && <SessionReview key={data.pendingReviewId} data={data} mutate={mutate} />}
-    {!data.pendingReviewId && !usernamePromptDismissed && !data.profile.username && !data.onboarding.usernamePromptCompleted && <UsernamePrompt mutate={mutate} onDone={warning => { setUsernamePromptDismissed(true); setUsernamePromptWarning(warning ?? ''); }} />}
   </div></SoundProvider>;
 }

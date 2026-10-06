@@ -1,17 +1,26 @@
 {
   "name": "antwork",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "productName": "antwork",
+  "description": "Local-first work timer and private work history",
+  "main": "desktop-dist/main.cjs",
   "type": "module",
   "engines": {
-    "node": "22.x"
+    "node": "^22.18.0 || ^24.0.0"
   },
   "scripts": {
     "dev": "node scripts/app.mjs",
     "build": "tsc -b && node scripts/app.mjs --build",
     "test": "node --experimental-strip-types --test",
     "test:browser": "node qa/smoke.mjs",
-    "test:calendar": "node --experimental-strip-types qa/calendar-checks.mjs"
+    "test:calendar": "node --experimental-strip-types qa/calendar-checks.mjs",
+    "desktop:build": "npm run build && node scripts/desktop.mjs",
+    "desktop:start": "npm run desktop:build && electron .",
+    "desktop:package": "npm run desktop:build && electron-forge package --platform=win32 --arch=x64",
+    "desktop:make": "npm run desktop:build && electron-forge make --platform=win32 --arch=x64",
+    "desktop:release": "npm run desktop:build && node scripts/release-windows.mjs && electron-builder --config release/windows/builder.cjs --win nsis --x64",
+    "test:desktop": "node qa/desktop-smoke.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -31,9 +40,14 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@electron-forge/cli": "8.0.1",
+    "@electron-forge/maker-squirrel": "8.0.1",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "electron": "44.5.1",
+    "electron-builder": "26.15.3",
+    "electron-squirrel-startup": "1.0.1",
     "esbuild": "^0.28.2",
     "markdown-it": "^15.0.2",
     "playwright-core": "^1.63.0",

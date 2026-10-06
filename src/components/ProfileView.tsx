@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { dateKey } from '../domain.ts';
 import { assertBackupImportSize, validateImport } from '../storage.ts';
-import { ProfileIdentityView } from './ProfileIdentity.tsx';
+import { CareerOverview } from './ProfileIdentity.tsx';
 import { Modal } from './Modal.tsx';
 import type { Mutate } from '../ui.ts';
 import type { AppData, Campaign } from '../types.ts';
@@ -47,7 +47,7 @@ export function ProfileView({ data, now, mutate, replace }: { data: AppData; now
   };
   return <div className="page-stack profile-page">
     <div className="page-title"><div><h1>Profile</h1><p>Your career</p></div></div>
-    <ProfileIdentityView data={data} now={now} mutate={mutate} />
+    <CareerOverview data={data} now={now} />
     <div className="profile-management bento-grid">
       <section className="panel campaigns-panel">
         <div className="panel-heading"><h2>Campaigns</h2><button className="button subtle" onClick={() => setCampaignEditor('new')}>Create campaign</button></div>

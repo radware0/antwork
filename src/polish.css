@@ -1,10 +1,9 @@
 /* antwork frame and screen density */
 .app-shell {
   display: block;
-  width: min(1280px, calc(100% - 48px));
-  min-height: calc(100vh - 48px);
-  margin: 24px auto;
-  border: 1px solid var(--border);
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
   background: var(--bg);
 }
 .brand { font-size: 13px; letter-spacing: -.01em; }
@@ -149,7 +148,6 @@
   .dashboard-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 760px) {
-  .app-shell { width: calc(100% - 24px); margin: 12px auto; min-height: calc(100vh - 24px); }
   .app-topbar { height: 48px; padding-inline: 12px; }
   .main-content { padding: 16px 12px calc(112px + env(safe-area-inset-bottom, 0px)); }
   .dashboard-rail { grid-template-columns: 1fr; }
@@ -423,4 +421,43 @@
   .timer-panel.is-resizable { min-width: 0; min-height: 0; width: min(640px, 100%); max-width: 640px; }
   .timer-panel .timer-resize-handle { display: none; }
   .timer-panel .timer-display { font-size: clamp(48px, 15cqi, 72px); }
+}
+
+.desktop-titlebar { user-select: none; -webkit-app-region: drag; app-region: drag; }
+.desktop-titlebar :is(button, a, input, select, textarea) { -webkit-app-region: no-drag; app-region: no-drag; }
+.desktop-titlebar > .window-controls { margin-left: auto; }
+.window-controls { display: flex; flex: 0 0 auto; align-items: center; gap: 4px; }
+.window-button { display: grid; place-items: center; width: 32px; min-width: 32px; height: 30px; padding: 0; border: 1px solid color-mix(in srgb, var(--text) 12%, transparent); border-radius: 7px; background: color-mix(in srgb, var(--surface) 20%, transparent); color: var(--text); backdrop-filter: blur(6px); }
+.window-button:hover { background: color-mix(in srgb, var(--text) 12%, transparent); }
+.window-close:hover { background: rgba(212, 48, 62, .8); border-color: transparent; color: #fff; }
+.timer-titlebar { user-select: none; }
+.timer-panel :is(.timer-controls .button, .timer-customize-button, select, input[type="number"]) { background: color-mix(in srgb, var(--surface) 25%, transparent); color: var(--text); border: 1px solid color-mix(in srgb, var(--text) 20%, transparent); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text) 6%, transparent); backdrop-filter: blur(6px); }
+.timer-panel .timer-controls .button.primary { background: color-mix(in srgb, var(--accent) 18%, transparent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); color: var(--text); }
+.timer-panel .timer-controls .button:hover { background: color-mix(in srgb, var(--text) 14%, transparent); }
+.timer-panel .timer-controls .button.primary:hover { background: color-mix(in srgb, var(--accent) 28%, transparent); }
+.timer-panel select option { background: var(--surface-2); color: var(--text); }
+@media (max-width: 400px) {
+  .timer-panel .timer-titlebar { gap: 4px; }
+  .timer-titlebar h2 { font-size: 12px; }
+  .timer-titlebar > span { font-size: 10px; }
+  .timer-titlebar :is(.window-button, .timer-customize-button) { width: 26px; min-width: 26px; height: 28px; min-height: 28px; }
+}
+
+/* The detached timer is the entire native window. */
+body:has(.timer-popout) { min-width: 0; }
+.timer-popout { display: flex; min-height: 100vh; padding: 0; }
+.timer-popout .timer-workspace { min-height: 100vh; gap: 0; margin: 0; }
+.timer-popout .timer-drag-stage { flex: 1; align-items: stretch; }
+.timer-popout .timer-drag-stage > .timer-panel { flex: 1; width: 100%; max-width: none; margin: 0; border: 0; border-radius: 0; }
+.timer-popout .timer-panel { -webkit-app-region: drag; app-region: drag; }
+.timer-popout .timer-panel :is(button, input, select, textarea), .timer-popout .app-modal { -webkit-app-region: no-drag; app-region: no-drag; }
+.timer-popout .timer-panel .timer-display { font-size: clamp(32px, 14cqi, 112px); }
+.timer-popout .timer-controls { margin-bottom: auto; }
+.timer-popout .timer-setup, .timer-popout .timer-active-context { margin-top: auto; }
+@media (max-height: 340px) {
+  .timer-popout .timer-panel { padding: 10px; }
+  .timer-popout .timer-setup, .timer-popout .timer-active-context, .timer-popout .timer-campaign-select { display: none; }
+  .timer-popout .panel-heading { margin-bottom: 0; }
+  .timer-popout .timer-display { margin-top: auto; }
+  .timer-popout .timer-controls .button { min-width: 96px; min-height: 32px; }
 }

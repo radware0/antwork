@@ -22,7 +22,7 @@ The calendar defaults to **Day quality**: Good is green, Steady is yellow, and R
 
 Switch to **Hours** for green shading based on time: under 2 hours is light, 2 to under 4 hours is medium, and 4 or more hours is dark. Zero hours stays neutral. The toggle is shared between Dashboard and Calendar and remembered on this device. Switching views preserves hours, ratings, and notes. There is no daily target or target difference in either view.
 
-Profile shows total saved deep work, best saved day by hours, longest saved session, most saved hours linked to one campaign, and lifetime Score. A live status shows an active or paused session before reverting to today's recorded work. The identity editor holds a display name, local @username, bio, links, avatar, and banner. Image uploads are cropped locally to static WebP; only Save profile persists a draft. New workspaces ask once for a username after local history loads; Skip, Close, and Escape complete the prompt without a handle. Existing usernames skip onboarding. Handles remain local and have no registration or availability check. Campaigns need a title but may have no description.
+Profile shows total saved deep work, best saved day by hours, longest saved session, most saved hours linked to one campaign, and lifetime Score. Profile identity editing (including name, username, and bio) and username onboarding are deprecated for now. Previously saved identity data remains in local storage and JSON backups. Campaigns need a title but may have no description.
 
 ## Sound and appearance
 

@@ -95,9 +95,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     await page.goto(process.env.QA_BASE_URL ?? 'http://localhost:5173/');
-    const prompt = page.getByRole('dialog', { name: 'Pick your handle', exact: true });
-    await prompt.getByRole('button', { name: 'Skip for now' }).click();
-    await prompt.waitFor({ state: 'hidden' });
     await page.getByRole('button', { name: 'Start lock-in' }).click();
     await page.getByRole('button', { name: 'Open Timer' }).click();
     const read = () => page.evaluate(() => new Promise(resolve => {

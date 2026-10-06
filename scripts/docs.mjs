@@ -12,6 +12,7 @@ export const docsPages = [
   { slug: 'architecture', title: 'Architecture', file: 'architecture.md' },
   { slug: 'privacy', title: 'Data and privacy', file: 'privacy.md' },
   { slug: 'development', title: 'Development and deployment', file: 'development.md' },
+  { slug: 'windows', title: 'Windows app', file: 'windows.md' },
   { slug: 'roadmap', title: 'Roadmap', file: 'roadmap.md' },
 ];
 

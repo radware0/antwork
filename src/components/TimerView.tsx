@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
 import { motion, useDragControls, useMotionValue } from 'motion/react';
-import { GripVertical, ImagePlus, LayoutGrid, MoveDiagonal2 } from 'lucide-react';
+import { GripVertical, ImagePlus, LayoutGrid, MoveDiagonal2, ExternalLink, X } from 'lucide-react';
 import { Modal } from './Modal.tsx';
+import { WindowControls } from './WindowControls.tsx';
 import { useSound } from '../SoundContext.tsx';
 import { finishTimer, pauseTimer, resumeTimer } from '../domain.ts';
 import { clockTime, countdownMinutes, timerLeft } from '../ui.ts';
@@ -12,6 +13,7 @@ import type { AppData, SessionResult, TimerPanelPreferences } from '../types.ts'
 
 interface Props {
   data: AppData; now: number; mutate: Mutate;
+  popout?: boolean;
   position: TimerPosition; onPositionChange: (position: TimerPosition) => void;
 }
 export interface TimerPosition { x: number; y: number }
@@ -99,7 +101,7 @@ export function TimerStatus({ data, now, mutate, onOpen }: { data: AppData; now:
   </section>;
 }
 
-export function TimerView({ data, now, mutate, position, onPositionChange }: Props) {
+export function TimerView({ data, now, mutate, position, onPositionChange, popout = false }: Props) {
   const sound = useSound();
   const [mode, setMode] = useState<'stopwatch' | 'countdown'>('stopwatch');
   const [hours, setHours] = useState(0);
@@ -258,6 +260,7 @@ export function TimerView({ data, now, mutate, position, onPositionChange }: Pro
   };
 
   useLayoutEffect(() => {
+    if (popout) return;
     const workspace = workspaceRef.current;
     const stage = stageRef.current;
     const panel = panelRef.current;
@@ -275,7 +278,7 @@ export function TimerView({ data, now, mutate, position, onPositionChange }: Pro
       setMaxPanelSize(current => current.width === nextMaxSize.width && current.height === nextMaxSize.height ? current : nextMaxSize);
       const panelWidth = panel.offsetWidth;
       const panelHeight = panel.offsetHeight;
-      const enoughRoom = window.matchMedia('(min-width: 900px)').matches
+      const enoughRoom = !popout && window.matchMedia('(min-width: 900px)').matches
         && nextMaxSize.height >= minPanelHeight && nextMaxSize.width >= minPanelWidth;
 
       if (!enoughRoom) {
@@ -328,7 +331,7 @@ export function TimerView({ data, now, mutate, position, onPositionChange }: Pro
       window.removeEventListener('scroll', schedule);
       window.visualViewport?.removeEventListener('resize', schedule);
     };
-  }, [position.x, position.y, resetPosition, savePosition, x, y, panelSize.width, panelSize.height]);
+  }, [position.x, position.y, resetPosition, savePosition, x, y, panelSize.width, panelSize.height, popout]);
 
   const onHandleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     if (event.key === 'Home') { event.preventDefault(); resetLayout(); return; }
@@ -352,10 +355,10 @@ export function TimerView({ data, now, mutate, position, onPositionChange }: Pro
       onDragEnd={() => savePosition({ x: x.get(), y: y.get() })}>
     {data.timerPanel.image && <div className="timer-panel-backdrop"><img className="timer-panel-image" src={data.timerPanel.image} alt="" style={{ opacity: data.timerPanel.imageOpacity / 100, filter: `blur(${data.timerPanel.imageBlur}px)` }} /><span className="timer-panel-contrast" /></div>}
     <div className="timer-panel-content">
-    <div className="panel-heading"><h2>Work timer</h2><span>{timer ? (timer.runningSince === null ? 'Paused' : 'Running') : 'Ready'}</span><button type="button" className="icon-button timer-customize-button" aria-label="Customize timer" title="Customize timer" onClick={() => setCustomizing(true)}><ImagePlus size={16} aria-hidden="true" /></button><div className="timer-move-controls">
+    <div className={'panel-heading' + (popout ? ' timer-titlebar' : '')}><h2>Work timer</h2>{!popout && window.antworkDesktop && <button type="button" className="icon-button" aria-label="Pop out timer" title="Pop out timer" onClick={() => window.antworkDesktop?.openTimer()}><ExternalLink size={16} aria-hidden="true" /></button>}<span>{timer ? (timer.runningSince === null ? 'Paused' : 'Running') : 'Ready'}</span><button type="button" className="icon-button timer-customize-button" aria-label="Customize timer" title="Customize timer" onClick={() => setCustomizing(true)}><ImagePlus size={16} aria-hidden="true" /></button>{!popout && <div className="timer-move-controls">
       {canDrag && (!sizeIsDefault || position.x !== 0 || position.y !== 0) && <button type="button" className="icon-button timer-layout-reset" aria-label="Reset timer layout" title="Reset layout" onClick={() => resetLayout(true)}><LayoutGrid size={15} aria-hidden="true" /></button>}
       {canDrag && <button ref={handleRef} type="button" className="icon-button timer-move-handle" aria-label="Move timer" aria-describedby={instructionsId} title="Drag to move timer" onPointerDown={event => dragControls.start(event.nativeEvent)} onKeyDown={onHandleKeyDown}><GripVertical size={17} aria-hidden="true" /></button>}
-    </div></div>
+    </div>}{popout && (window.antworkDesktop ? <WindowControls label="timer window" /> : <button type="button" className="icon-button" aria-label="Close timer window" title="Close timer window" onClick={() => window.close()}><X size={16} aria-hidden="true" /></button>)}</div>
     {timer ? <div className="timer-active-context"><strong>{selectedCampaign?.title ?? 'Free session'}</strong><span>{selectedCampaign ? 'Campaign' : 'No campaign linked'}</span></div> : (
       <div className="timer-setup">
         <div className="field-row">
@@ -389,7 +392,7 @@ export function TimerView({ data, now, mutate, position, onPositionChange }: Pro
     <span id={instructionsId} className="sr-only">Drag the header grip to move the timer. Arrow keys move 16 pixels for position, hold Shift for 64 pixels. For size, use the bottom-right handle: arrow keys change 16 pixels, hold Shift for 64 pixels. Home on either handle resets both size and position. Movement and resizing stay within the workspace.</span>
     </motion.section>
     </div>
-    <p ref={hintRef} className="timer-history-hint">Finished sessions and match results live in Work Hours.</p>
+    {!popout && <p ref={hintRef} className="timer-history-hint">Finished sessions and match results live in Work Hours.</p>}
     {customizing && <TimerCustomizeModal panel={data.timerPanel} mutate={mutate} onClose={() => setCustomizing(false)} />}
   </div>;
 }
