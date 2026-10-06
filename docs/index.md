@@ -2,7 +2,7 @@
 
 antwork is a local-first progress tracker for people who like the clarity of a game career screen but want honest, flexible work days. Open it, start a lock-in, keep a note, and see the hours you actually worked. Rest days do not become debts.
 
-This is a public beta of a personal tool, not a validated productivity method. It runs locally in your browser; a Windows desktop build is available for personal use. There are no accounts, cloud sync, public profiles, or server-side work records. Read the [Windows app instructions](/docs/windows/) for installation, history transfer, and timer behavior.
+antwork is available as a Windows app. The website provides the [GitHub download](https://github.com/radware0/antwork/releases/latest) and these docs. Your work history stays on your computer. There are no accounts, cloud sync, public profiles, or server-side work records. Read the [Windows app instructions](/docs/windows/) for installation, history transfer, and timer behavior.
 
 ## The question behind it
 
@@ -15,6 +15,6 @@ Early designs borrowed the visual language of game histories and an hours-versus
 1. Start a stopwatch from Dashboard with **Start lock-in**, or set a countdown on Timers.
 2. Finish and save the session. Add a campaign, note, or personal result if useful.
 3. Write in the daily journal and review your calendar or Work Hours history.
-4. Export a JSON backup so the browser is not your only copy.
+4. Export a JSON backup so the app is not your only copy.
 
 Continue with the [daily loop](/docs/daily-loop/), read the [feature rules](/docs/features/), or trace the [design decisions](/docs/decisions/).

@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import '@fontsource/rajdhani/latin-600.css';
 import './tailwind.css';
 import './styles.css';
+import './theme-toggle.css';
 import './polish.css';
 import './profile.css';
 import './bento.css';

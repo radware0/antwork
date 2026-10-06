@@ -1,6 +1,6 @@
 # Windows app
 
-The first Windows release is for personal use, followed by trusted testers. It keeps Dashboard, Timers, Calendar, Work Hours, and Profile available offline. Accounts and other platforms are deferred. Windows 11 x64 is the primary target. Windows 10 22H2 x64 is a compatibility target that still needs testing on that system.
+The Windows app keeps Dashboard, Timers, Calendar, Work Hours, and Profile available offline. Download it from [GitHub Releases](https://github.com/radware0/antwork/releases/latest). Accounts and other platforms are deferred. Windows 11 x64 is the primary target. Windows 10 22H2 x64 is a compatibility target that still needs testing on that system.
 
 ## Install and open
 
@@ -10,12 +10,13 @@ The installed app works offline. Documentation opens in a separate window so ope
 
 ## Bring your existing history
 
-1. Open the website in the browser where your history lives.
-2. In Profile, choose **Export JSON** and keep that backup.
-3. Open the Windows app, go to Profile, and choose **Import JSON**.
-4. Review and confirm **Replace local history**. Export any existing desktop history first if you need it.
+If you exported a JSON backup from the former web app:
 
-The website and desktop profiles are separate. Backups contain readable personal text and images. Current exports use schema version 5; this build imports versions 1 through 5 with a 32 MiB file limit.
+1. Open the Windows app, go to Profile, and choose **Import JSON**.
+2. Select your backup and review **Replace local history**. Export any existing desktop history first if you need it.
+3. Confirm the replacement.
+
+The website now serves the download page and Docs. It does not open or delete the browser's previous history. Browser and desktop profiles are separate. Backups contain readable personal text and images. Current exports use schema version 5; this build imports versions 1 through 5 with a 32 MiB file limit.
 
 ## Timer behavior
 

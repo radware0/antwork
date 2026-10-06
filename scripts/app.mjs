@@ -8,6 +8,7 @@ import tailwindcss from '@tailwindcss/postcss';
 import { buildDocs } from './docs.mjs';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const production = process.argv.includes('--build');
+const desktop = process.argv.includes('--desktop');
 const outputDir = fileURLToPath(new URL('../dist/', import.meta.url));
 if (production) {
   if (resolve(outputDir, '..') !== resolve(root)) throw new Error('Refusing to clear output outside the project root');
@@ -17,7 +18,7 @@ await mkdir(root + 'dist', { recursive: true });
 await cp(root + 'public', root + 'dist', { recursive: true });
 const html = (await readFile(root + 'index.html', 'utf8')).replace(/<script type="module"[^>]*><\/script>/, '<link rel="stylesheet" href="/assets/main.css"><script type="module" src="/assets/main.js"></script>');
 await writeFile(root + 'dist/index.html', html);
-await buildDocs();
+await buildDocs({ desktop });
 const tailwindPlugin = {
   name: 'antwork-tailwind',
   setup(build) {
@@ -31,13 +32,13 @@ const tailwindPlugin = {
     });
   },
 };
-const options = { absWorkingDir: root, entryPoints: ['src/main.tsx'], bundle: true, splitting: true, outdir: 'dist/assets', format: 'esm', jsx: 'automatic', target: 'es2022', minify: production, sourcemap: !production, external: ['/fonts/*'], loader: { '.woff': 'file', '.woff2': 'file' }, alias: { '@': root + 'src' }, plugins: [tailwindPlugin], define: { 'process.env.NODE_ENV': JSON.stringify(production ? 'production' : 'development') }, logLevel: 'info' };
+const options = { absWorkingDir: root, entryPoints: { main: desktop ? 'src/main.tsx' : 'src/site.tsx' }, bundle: true, splitting: true, outdir: 'dist/assets', format: 'esm', jsx: 'automatic', target: 'es2022', minify: production, sourcemap: !production, external: ['/fonts/*'], loader: { '.woff': 'file', '.woff2': 'file' }, alias: { '@': root + 'src' }, plugins: [tailwindPlugin], define: { 'process.env.NODE_ENV': JSON.stringify(production ? 'production' : 'development') }, logLevel: 'info' };
 if (production) await build(options);
 else {
  const ctx = await context(options);
  await ctx.watch();
  const docsWatcher = watch(root + 'docs', { recursive: true }, () => {
-   void buildDocs().catch(error => console.error('Could not rebuild docs:', error));
+   void buildDocs({ desktop }).catch(error => console.error('Could not rebuild docs:', error));
  });
  const { port } = await ctx.serve({ servedir: root + 'dist', host: '127.0.0.1', port: 5173 });
  console.log('antwork: http://localhost:' + port);

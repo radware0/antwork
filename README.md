@@ -1,31 +1,47 @@
 # antwork
 
-antwork makes flexible deep work visible. Start a lock-in, save honest work hours, write a private daily note, and review your history like a game career screen. This is a local-first public beta: there are no accounts or cloud sync.
+antwork is a Windows app for timing your work and keeping a record of it. Start a stopwatch or countdown, save your hours, and look back through your calendar and daily notes. Career statistics give you a view of the work you've put in over time.
 
-Try the beta at [antwork-five.vercel.app](https://antwork-five.vercel.app/).
+[Download v1.0.0 for Windows](https://github.com/radware0/antwork/releases/tag/v1.0.0). The [website](https://antwork-five.vercel.app/) now points to the app download and documentation.
 
-Read the [project story and progress](docs/JOURNEY.md), written for this repository.
+The app works offline. Everything is saved on your computer, with no accounts or cloud sync.
 
-## Run locally
+## Install
 
-Use Node.js 22.18+ or 24.x and run `npm ci`, then `npm run dev`. Open `http://localhost:5173`. On Windows PowerShell, use `npm.cmd` if `npm` is blocked by execution policy.
+Download `antwork-1.0.0-Setup.exe` from the release page and run it. Choose where to install it and whether it's for your Windows account or everyone. Installing for everyone asks for administrator access. The installer includes the runtime, so you don't need Node.js.
 
-Run `npm test` for unit tests and `npm run build` for the static app plus documentation in `dist/`. With the development server and Playwright Chromium available, `npm run test:browser` checks the full daily loop.
+Windows 11 x64 is the main target. Windows 10 still needs testing on a Windows 10 machine. This release is unsigned, so Windows security may warn or block it. The release page lists the current test limits, including an unresolved automated Close-button check.
 
-## Windows app
+If you're upgrading from a 0.1.x desktop build, export a backup, close antwork, and uninstall the old version first. Uninstalling keeps your history.
 
-The desktop build uses Electron. Run `npm exec -- install-electron --no` once to download the development runtime, then `npm run desktop:start`. Run `npm run desktop:release` for the guided Windows x64 installer at `release/windows/out/antwork-1.0.0-Setup.exe`. It asks for the install location and whether to install for the current user or everyone, then shows installation progress. Installing for everyone requests administrator access. It bundles the runtime and works offline without a development server. Other platforms are deferred.
+## Using it
 
-Timers continue when minimized or the screen is locked. Windows sleep and app close pause the timer; resume it manually. Updates are manual. Desktop history lives in `%APPDATA%\antwork`, separately from the website, and survives uninstall. Move existing history through Profile's JSON export/import workflow. Import replaces the destination history.
+Start a session from Dashboard or Timers. The timer keeps running while minimized or when the screen is locked. Sleep and quitting pause it; resume it when you're ready.
 
-Read the [Windows instructions](docs/windows.md) and [researched checklist](docs/windows-app-checklist.md). `npm run test:desktop` checks the built launcher with isolated test data; set `ANTWORK_QA_EXECUTABLE` to test a packaged executable. This personal build is unsigned, so Windows security may warn or block it. Windows 10 compatibility still requires testing on Windows 10.
+Use **Pop out timer** for a separate window you can move and resize. It stays in sync with the main window. You can add a local background image and adjust its opacity and blur. The app starts in Black; the theme toggle switches between Black and White.
 
-## Read the docs
+Profile shows your career statistics. Profile identity editing and username onboarding have been retired, but existing identity data stays in backups. Campaign descriptions are optional.
 
-Start with the [overview](docs/index.md), [daily loop](docs/daily-loop.md), and [decision history](docs/decisions.md). The same Markdown becomes the `/docs/` section in the built site. [Development and deployment](docs/development.md) covers GitHub and Vercel preparation; [data and privacy](docs/privacy.md) explains the current local-only boundary.
+## Your history
 
-Your data stays in this browser's IndexedDB unless you export it. JSON backups contain readable personal text and images. Export a backup before clearing site data or moving to another domain.
+Desktop history lives in `%APPDATA%\antwork` and survives uninstall. Updates are manual: export a backup, close the app, and run the newer installer.
 
-New workspaces open in Black; switch between Black and White from the top bar. The chart adapts the registry-installed EvilCharts component; the minimal dock and liquid theme switch adapt supplied source. Applicable licenses are recorded in [third-party notices](THIRD_PARTY_NOTICES.md). No project-wide license has been granted for antwork.
+Use Profile's JSON export to keep a backup. Backups contain readable personal text and images. Importing replaces the destination history, so export that history first if you need it. Current exports use schema version 5; this build imports versions 1 through 5, while older builds can't read v5 backups.
 
-On desktop, the Timers panel can be moved and resized. Add a local image background and adjust its opacity and blur from **Customize timer**. The Windows app also offers **Pop out timer**, with controls synchronized to the main window. Profile identity editing and username onboarding are deprecated; career statistics remain. Existing identity data stays in backups. Campaign descriptions are optional. JSON backups use schema version 5; this build imports versions 1–5, but older builds cannot import v5 backups.
+History from the former web app is separate from desktop history. You can import a previously exported browser backup into the Windows app.
+
+## Working on the code
+
+Use Node.js 22.18+ or 24.x. Run `npm ci`, then `npm run dev` to open the download page at `http://localhost:5173`. Use `npm run dev:app` to work on the app screens in a browser. On Windows PowerShell, use `npm.cmd` if execution policy blocks `npm`.
+
+Run `npm test` for unit tests. `npm run build` builds the website and docs in `dist/`; with the development server running, `npm run test:browser` checks the download page. The app's browser checks are available through `npm run test:app:browser` with `dev:app` running.
+
+For desktop development, run `npm exec -- install-electron --no` once to download Electron, then `npm run desktop:start`. `npm run test:desktop` checks the launcher with isolated test data; set `ANTWORK_QA_EXECUTABLE` to check a packaged executable.
+
+Run `npm run desktop:release` to build the Windows installer at `release/windows/out/antwork-1.0.0-Setup.exe`. Other platforms are deferred.
+
+## More about the project
+
+Read the [project story](docs/JOURNEY.md), [overview](docs/index.md), [daily loop](docs/daily-loop.md), or [decision history](docs/decisions.md). The [Windows instructions](docs/windows.md) cover installation and timer behavior; the [checklist](docs/windows-app-checklist.md) records release checks. [Development and deployment](docs/development.md) covers builds and hosting, and [data and privacy](docs/privacy.md) explains storage.
+
+The chart, dock, and theme switch use adapted component source. Credits and licenses are in [third-party notices](THIRD_PARTY_NOTICES.md). No project-wide license has been granted for antwork.

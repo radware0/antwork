@@ -1,0 +1,8 @@
+.liquid-theme-toggle { position: relative; display: block; flex: 0 0 92px; width: 92px; height: 46px; min-height: 46px; padding: 0; border: 0; border-radius: 999px; background: #e7e7e9; color: #62626b; touch-action: none; }
+.liquid-theme-toggle[data-on="true"] { background: #262930; color: #bec5d0; }
+.liquid-theme-thumb { position: absolute; left: 0; top: 5px; width: 36px; height: 36px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .12); pointer-events: none; }
+.liquid-theme-toggle[data-on="true"] .liquid-theme-thumb { background: #e9ecf1; }
+.liquid-theme-toggle > svg { position: absolute; z-index: 1; top: 15px; pointer-events: none; }
+.liquid-theme-sun { left: 15px; }
+.liquid-theme-moon { right: 15px; }
+.liquid-theme-toggle[data-on="false"] .liquid-theme-sun, .liquid-theme-toggle[data-on="true"] .liquid-theme-moon { color: #18181b; }
