@@ -38,7 +38,7 @@ function DownloadPage() {
     </header>
     <main className="site-main">
       <div className="site-message">
-        <h1>Antwork available as app</h1>
+        <h1>Antwork now available as app</h1>
         <a className="site-download" href="https://github.com/radware0/antwork/releases/latest">
           Download on GitHub<ArrowUpRight size={18} aria-hidden="true" />
         </a>

@@ -16,7 +16,7 @@ page.on('pageerror', error => errors.push(error.message));
 await mkdir('.qa', { recursive: true });
 
 async function checkPage() {
-  await page.getByRole('heading', { name: 'Antwork available as app', exact: true }).waitFor();
+  await page.getByRole('heading', { name: 'Antwork now available as app', exact: true }).waitFor();
   assert.equal(await page.getByRole('heading').count(), 1);
   assert.equal(await page.getByRole('link').count(), 2, 'Only download and Docs links are shown');
   assert.equal(await page.getByRole('button').count(), 0, 'App controls are absent');
