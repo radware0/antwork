@@ -24,6 +24,16 @@ Switch to **Hours** for green shading based on time: under 2 hours is light, 2 t
 
 Profile shows total saved deep work, best saved day by hours, longest saved session, most saved hours linked to one campaign, and lifetime Score. Profile identity editing (including name, username, and bio) and username onboarding are deprecated for now. Previously saved identity data remains in local storage and JSON backups. Campaigns need a title but may have no description.
 
+## Worked-day cards
+
+Select today or a past date with saved work in Calendar, then choose **View day card**. The popup shows that date, combined saved hours, and your Good, Steady, Rough, or Unrated day quality. Work crossing midnight contributes only its portion on that date. Unfinished timer time stays outside the card total; work corrections and rating changes update the card.
+
+Choose **Customize card** to add one picture or video background for the date. PNG, JPEG, and WebP pictures up to 10 MiB use the timer's local WebP processing. MP4 and WebM videos accept up to 5 MiB and 30 seconds and must be playable by the app. Videos loop silently and automatically while the card is visible, independent of interface sound and motion preferences. The card has no playback controls. Hidden or closed cards stop playback. Text shadows keep the hours and borderless day-quality label readable over the background; an empty card has a transparent background.
+
+Save background applies the draft. Cancel and Escape discard unsaved changes. A failed save retains the draft for retry. Backgrounds stay associated with their date when sessions change. If all work on that date is deleted, Calendar still offers **Remove day background** to free space.
+
+Pictures and videos are included in schema-6 JSON backups. Changes that grow the complete formatted backup beyond 32 MiB are rejected with an instruction to remove a background. Existing larger legacy history remains readable and can be reduced without truncation.
+
 ## Sound and appearance
 
 New installations start in Black and can switch immediately between Black and White from the top-bar pill. Saved System and Slate preferences resolve to Black; saved White stays White. Interface clicks and countdown alarms start on for new installations. The separate top-bar button mutes or unmutes both sounds and remembers that choice. Older installations keep their previous sound preference until the button is used. Sound requires browser permission through user interaction; an alarm is not guaranteed if the tab or browser is closed or suspended.

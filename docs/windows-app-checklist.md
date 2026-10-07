@@ -1,6 +1,6 @@
 # Windows application checklist
 
-**v1.0.0 installer update:** the release setup now uses a guided NSIS wizard in `release/windows/`. It asks for current-user or all-users installation, allows a destination folder, and shows progress. The earlier Squirrel per-user installer notes below describe the 0.1.x builds. The v1.0.0 installer still needs a clean-machine walkthrough before GitHub publication.
+**Current release: v1.1.0.** The release setup uses the guided NSIS wizard in `release/windows/`. It asks for current-user or all-users installation, allows a destination folder, and shows progress. The older Squirrel installation evidence below describes 0.1.x builds. Clean-machine NSIS walkthroughs and actual installer replacement remain open checks; the personal release records these limits in its [release notes](../release/windows/v1.1.0.md).
 
 Researched with Firecrawl on 6 October 2026. This checklist combines official Windows and desktop-framework documentation with antwork's current code. Checked planning items record the user's decisions; unchecked items remain open decisions or release checks.
 
@@ -10,7 +10,7 @@ The first desktop release is for personal use, before trusted testers. It uses E
 
 antwork is a React and TypeScript app with a static esbuild output. It has local fonts, hash navigation, and no application backend. The build emits `/assets/`, `/fonts/`, and `/docs/` URLs that the desktop environment must resolve. See [the build script](../scripts/app.mjs), [architecture](architecture.md), and [package metadata](../package.json).
 
-History lives in IndexedDB. A desktop browser profile will not automatically contain the history from the existing website. JSON export/import is the current transfer path; importing replaces history. Backups support schema versions 1–5 and a 32 MiB input limit. See [storage](../src/storage.ts), [backup controls](../src/components/ProfileView.tsx), and [validation](../src/validation.ts).
+History lives in IndexedDB. A desktop browser profile will not automatically contain the history from the existing website. JSON export/import is the current transfer path; importing replaces history. Backups support schema versions 1–6 and a 32 MiB input limit. See [storage](../src/storage.ts), [backup controls](../src/components/ProfileView.tsx), and [validation](../src/validation.ts).
 
 Browser timer recovery uses persisted wall-clock timestamps. The desktop bridge now pauses at sleep or close and recovers an interrupted timer as paused at its durable checkpoint. Minimize and screen lock keep it running. Alarms run in the renderer, so a fully exited app cannot sound them. See [timer calculations](../src/domain.ts), [desktop lifecycle](../desktop/runtime.cjs), [timer recovery](../src/useLedger.ts), and [sound](../src/sound.ts).
 
@@ -54,7 +54,7 @@ Both rounds are settled. The user approved the ten decisions above and authorize
 - [x] Define timer states: minimize/lock continue; sleep/close/quit pause; reopen/wake require manual resume. Lifecycle-event and close/reopen tests pass.
 - [x] Recover after an immediate exit without charging closed time. Unit checks cover backwards timestamps, date boundaries, and duplicate countdown settlement. The app takes a per-profile single-instance lock.
 - [ ] Verify real hardware sleep, clock changes, and duplicate-instance behavior on tester machines. QA emits lifecycle events instead of suspending or locking this computer.
-- [ ] Verify a newer-version upgrade preserves sessions, journals, images, settings, and active timer state. Same-version reinstall is tested; a future version upgrade remains a release check.
+- [x] Verify application migration from v1.0.0 to v1.1.0 preserves sessions, journals, ratings, images, settings, and active timer state. Real old and new packaged apps used the same isolated profile; the timer recovered paused. Actual installer replacement remains a separate open check.
 - [ ] Define when alarms must work and test those states, including muted sound. Windows sleep requires recovery behavior; an exited renderer cannot deliver an alarm. Electron exposes suspend/resume and Windows lock/unlock events if chosen. [Power monitor](https://www.electronjs.org/docs/latest/api/power-monitor).
 
 ## Windows usability
@@ -137,3 +137,22 @@ Timer buttons, image controls, dropdowns, and number fields use translucent surf
 Validation: production compilation, 67 unit tests, browser smoke across five pages in two themes and four viewport sizes, and final packaged desktop smoke passed. Native Windows hit tests verified title-bar dragging, clickable controls, full timer dragging, and all resize edges/corners. Actual custom buttons passed maximize/restore, keyboard activation, minimization, and close/reopen; offline use, synchronized controls, session saving, JSON transfer, sleep pause, crash recovery, and history retention also passed. The packaged main window is shown on-screen before testing its custom close button, avoiding the off-screen input timeout in the earlier test setup. Evidence: `.qa/desktop-babca55a-86d4-4c06-a861-42d11bad6f70/`. Official guidance is saved in [electron-custom-title-bar.md](../.firecrawl/electron-custom-title-bar.md) from [Electron's custom title-bar tutorial](https://www.electronjs.org/docs/latest/tutorial/custom-title-bar).
 
 Installer: `out/make/squirrel.windows/x64/antwork-0.1.5-Setup.exe` (153,914,368 bytes), unsigned. SHA-256: `2b5ba53ce16faffa9d1201e082d00ccaed558fba7d1f8e0c92743de8f740cc29`.
+
+## v1.1.0 worked-day cards - October 8, 2026
+
+Calendar now opens an achievement card for today or past dates with saved work. It shows saved hours and the manual day rating, with one optional picture or silent looping MP4/WebM background. The screenshot review removed playback controls and the opaque popup frame; text shadows and a borderless day-quality label replace the dim overlay and badge. Videos run while visible, including with reduced motion enabled, and stop when hidden or closed.
+
+Backups use schema 6 and include day media. Imports accept schemas 1 through 6; v1.0.0 cannot import the new exports. Growing writes above the 32 MiB backup limit retain saved data and the draft. The Close-button crash from a late native timer update is fixed and the packaged close/reopen check passes.
+
+Validation on Windows 11 Pro x64:
+
+- `npm test`: 71 passed, zero failures.
+- Website and Windows release builds passed. Website smoke preserves the download page, both themes, responsive layout, browser history, and Docs synchronization.
+- Packaged day-card checks passed for saved totals, ratings, image drafts, failed writes, both video formats, silence, automatic loops without controls, native hide/show, temporary URL cleanup, themes, narrow windows, media rejection, backup restoration, and size limits. Evidence: `.qa/day-cards-4dd429ed-bc04-44e4-b34d-64dcaa9e65ad/`.
+- Full packaged desktop smoke passed offline screens and Docs, renderer isolation, window and tray behavior, synchronized pop-out controls, sleep-event pause, save/JSON transfer, close/reopen, and crash recovery. Evidence: `.qa/desktop-d7e3dbde-9bfc-46bb-a55f-8edc5df3f5e7/`.
+- Real v1.0.0 and v1.1.0 binaries used one isolated profile and preserved hours, journals, ratings, identity data, images, settings, campaigns, and the paused timer. Evidence: `.qa/upgrade-89110156-a826-40c7-b7cb-22828f8c61e6/result.json`. Actual installer replacement was not tested.
+- The final archive contains only `app-dist/`, `desktop-dist/`, package metadata, and third-party notices. Renderer, desktop bridge, and generated documentation match the final build. Evidence: `.qa/release-v1.1.0/package-audit.json`.
+
+Installer: `release/windows/out/antwork-1.1.0-Setup.exe` (111,739,652 bytes), unsigned. SHA-256: `8e7c407f6920c0d2e29f96b464000ec850e1433b4f276e143232801b87d1de88`.
+
+Windows 10, clean-machine NSIS walkthroughs for both scopes, actual installer replacement, physical sleep, Narrator, and multi-monitor scaling remain tester checks. Previous Squirrel installer results remain historical. The [v1.1.0 release notes](../release/windows/v1.1.0.md) include these limits and manual backup/update instructions.

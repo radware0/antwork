@@ -1,5 +1,6 @@
 node_modules/
 dist/
+app-dist/
 desktop-dist/
 out/
 release/windows/out/

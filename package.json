@@ -1,7 +1,7 @@
 {
   "name": "antwork",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "productName": "antwork",
   "description": "Local-first work timer and private work history",
   "main": "desktop-dist/main.cjs",
@@ -18,6 +18,7 @@
     "test:browser": "node qa/site-smoke.mjs",
     "test:app:browser": "node qa/smoke.mjs",
     "test:calendar": "node --experimental-strip-types qa/calendar-checks.mjs",
+    "test:day-cards": "node --experimental-strip-types qa/day-cards.mjs",
     "desktop:build": "npm run build:app && node scripts/desktop.mjs",
     "desktop:start": "npm run desktop:build && electron .",
     "desktop:package": "npm run desktop:build && electron-forge package --platform=win32 --arch=x64",

@@ -102,7 +102,7 @@ test('version two backups migrate quest-linked saved and active sessions to dire
   old.sessions = [{ id: 'saved', source: 'manual', intervals: [{ start: 1000, end: 61000 }], note: 'kept', questOccurrenceId: 'o' }];
   old.timer = { id: 'active', mode: 'stopwatch', durationMs: null, accumulatedMs: 10, intervals: [{ start: 1000, end: 1010 }], runningSince: 2000, questOccurrenceId: 'o' };
   const migrated = validateImport(old) as unknown as AppData & { sessions: FlexibleSession[]; timer: NonNullable<AppData['timer']> & { campaignId: string | null } };
-  assert.equal(migrated.schemaVersion, 5);
+  assert.equal(migrated.schemaVersion, 6);
   assert.equal(migrated.setupComplete, true);
   assert.equal(migrated.sessions[0].campaignId, 'c');
   assert.equal(migrated.sessions[0].result, null);
@@ -118,7 +118,7 @@ test('version one migration and version three backups preserve history and optio
   base.schemaVersion = 1;
   base.sessions = [{ id: 'legacy', source: 'manual', intervals: [{ start: 1000, end: 61000 }], note: '', questOccurrenceId: null }];
   const migrated = validateImport(base);
-  assert.equal(migrated.schemaVersion, 5);
+  assert.equal(migrated.schemaVersion, 6);
   assert.equal(migrated.setupComplete, true);
   assert.equal(migrated.sessions[0].id, 'legacy');
   assert.equal(migrated.profile.name, '');
@@ -127,7 +127,7 @@ test('version one migration and version three backups preserve history and optio
   v3.campaigns.push({ id: 'c', title: 'Campaign', note: 'Description', createdAt: 1, completedAt: null });
   v3.sessions.push(session('rated', 1000, 45, { campaignId: 'c', result: 'steady' }));
   const roundTrip = validateImport(JSON.parse(JSON.stringify(v3))) as unknown as AppData & { sessions: FlexibleSession[] };
-  assert.equal(roundTrip.schemaVersion, 5);
+  assert.equal(roundTrip.schemaVersion, 6);
   assert.equal(roundTrip.sessions[0].campaignId, 'c');
   assert.equal(roundTrip.sessions[0].result, 'steady');
 });

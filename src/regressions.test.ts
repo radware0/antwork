@@ -16,7 +16,7 @@ test('version one backup gains an empty profile without losing work', () => {
  const keptSession = {id:'kept',source:'manual',intervals:[{start:1000,end:61000}],note:'First hour',questOccurrenceId:null};
  legacy.sessions = [keptSession];
  const migrated = validateImport(legacy);
- assert.equal(migrated.schemaVersion, 5);
+ assert.equal(migrated.schemaVersion, 6);
  assert.equal(migrated.setupComplete, true);
  assert.deepEqual(migrated.profile, {name:'',username:'',bio:'',avatar:null,banner:null,links:[]});
  const {campaignId,result,timing,...preservedSession} = migrated.sessions[0];

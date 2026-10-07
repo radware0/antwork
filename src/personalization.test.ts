@@ -48,7 +48,7 @@ test('saved Slate appearance becomes Black without changing imported history or 
 
 test('new workspaces include default timer workspace and username onboarding preferences', () => {
   const data = createInitialData('2026-09-29') as unknown as Record<string, unknown>;
-  assert.equal(data.schemaVersion, 5);
+  assert.equal(data.schemaVersion, 6);
   assert.deepEqual(data.timerPanel, {
     image: null,
     imageOpacity: 30,
@@ -66,7 +66,7 @@ test('version four backups migrate to timer defaults and prompt only users witho
   delete old.onboarding;
   old.profile.username = '';
   const migrated = validateImport(old) as unknown as Record<string, any>;
-  assert.equal(migrated.schemaVersion, 5);
+  assert.equal(migrated.schemaVersion, 6);
   assert.deepEqual(migrated.timerPanel, {
     image: null,
     imageOpacity: 30,

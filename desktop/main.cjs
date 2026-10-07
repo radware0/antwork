@@ -122,7 +122,7 @@ function start() {
 
   app.whenReady().then(async () => {
     lifecycle = new DesktopLifecycle(path.join(app.getPath('userData'), 'timer-checkpoint.json'));
-    const root = path.join(app.getAppPath(), 'dist');
+    const root = path.join(app.getAppPath(), 'app-dist');
     protocol.handle('antwork', async request => {
       try {
         if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Method not allowed', { status: 405 });
@@ -192,6 +192,7 @@ function start() {
     });
     ipcMain.on('antwork:timer-state', (event, runningSince, deadline) => {
       // The main window owns the recovery heartbeat; the pop-out shares its saved timer.
+      if (!mainWindow || mainWindow.isDestroyed() || closeTimer || allowClose) return;
       if (trustedSender(event) && event.sender === mainWindow.webContents && (runningSince === null || Number.isFinite(runningSince)) && (deadline === null || (Number.isSafeInteger(deadline) && deadline > 0))) {
         clearTimeout(countdownTimeout);
         try {

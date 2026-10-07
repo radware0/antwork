@@ -1,6 +1,6 @@
 const path = require('node:path');
 const { version } = require('./package.json');
-const included = new Set(['dist', 'desktop-dist', 'package.json', 'THIRD_PARTY_NOTICES.md']);
+const included = new Set(['app-dist', 'desktop-dist', 'package.json', 'THIRD_PARTY_NOTICES.md']);
 
 module.exports = {
   packagerConfig: {

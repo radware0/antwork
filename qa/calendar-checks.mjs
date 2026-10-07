@@ -39,7 +39,7 @@ const assertCell = async (day, css, text) => {
 
 try {
   await page.clock.setFixedTime(new Date('2026-10-05T04:00:00Z'));
-  await page.goto(process.env.QA_BASE_URL ?? 'http://localhost:5173/', { waitUntil: 'networkidle' });
+  await page.goto(process.env.QA_BASE_URL ?? 'http://localhost:5174/', { waitUntil: 'networkidle' });
   await page.getByRole('heading', { name: 'Dashboard', exact: true }).waitFor();
   const { dailyRatings: _ratings, calendarMode: _mode, ...oldData } = createInitialData('2026-10-01');
   oldData.onboarding.usernamePromptCompleted = true;

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { dateKey, localDate } from './domain.ts';
 import type { AppData, TimerPanelPreferences, WorkSession } from './types.ts';
+import { MAX_DAY_VIDEO_BYTES, MAX_DAY_VIDEO_SECONDS, validDayVideoData } from './dayCardMedia.ts';
 
 const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v => v >= '1970-01-01' && v <= '2100-12-31' && dateKey(localDate(v)) === v, 'Invalid date');
 const id = z.string().min(1);
@@ -71,6 +72,13 @@ const v5Schema = z.object({ schemaVersion: z.literal(5), ...legacyShape,
   timerPanel, onboarding,
   dailyRatings: z.record(day, z.enum(['good', 'steady', 'rough'])).default({}),
   calendarMode: z.enum(['quality', 'hours']).default('quality') });
+const dayCardBackground = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('image'), data: image.unwrap() }),
+  z.object({ kind: z.literal('video'),
+    data: z.string().max(Math.ceil(MAX_DAY_VIDEO_BYTES / 3) * 4 + 32).refine(validDayVideoData, 'Invalid MP4 or WebM video.'),
+    durationSeconds: z.number().finite().positive().max(MAX_DAY_VIDEO_SECONDS) }),
+]);
+const v6Schema = v5Schema.extend({ schemaVersion: z.literal(6), dayCardBackgrounds: z.record(day, dayCardBackground).default({}) });
 
 const emptyProfile = { name: '', bio: '', avatar: null, banner: null, links: [] } as const;
 
@@ -89,7 +97,7 @@ export function parseBackup(value: unknown): AppData {
   const version = value && typeof value === 'object' ? (value as { schemaVersion?: unknown }).schemaVersion : null;
   const result = version === 1 ? legacySchema.safeParse(value)
     : version === 2 ? v2Schema.safeParse(value)
-      : version === 3 ? v3Schema.safeParse(value) : version === 4 ? v4Schema.safeParse(value) : version === 5 ? v5Schema.safeParse(value) : null;
+      : version === 3 ? v3Schema.safeParse(value) : version === 4 ? v4Schema.safeParse(value) : version === 5 ? v5Schema.safeParse(value) : version === 6 ? v6Schema.safeParse(value) : null;
   if (!result) throw new Error('Invalid backup: unsupported schema version.');
   if (!result.success) invalidBackup(result);
 
@@ -106,12 +114,13 @@ export function parseBackup(value: unknown): AppData {
     ...raw.timer,
     campaignId: Number(version) >= 3 && raw.timer.campaignId !== undefined ? raw.timer.campaignId : legacyCampaignId(raw.timer, raw.occurrences, raw.quests),
   } : null;
-  const migratedOnboarding = version === 5 ? raw.onboarding : { usernamePromptCompleted: Boolean(profile.username) };
+  const migratedOnboarding = Number(version) >= 5 ? raw.onboarding : { usernamePromptCompleted: Boolean(profile.username) };
   const data = {
-    ...raw, schemaVersion: 5, setupComplete: true, theme: raw.theme === 'white' ? 'white' : 'black',
+    ...raw, schemaVersion: 6, setupComplete: true, theme: raw.theme === 'white' ? 'white' : 'black',
     preferences: raw.preferences ?? { interfaceSounds: false, timerAlarm: false },
     timerPanel: raw.timerPanel ?? defaultTimerPanel,
     dailyRatings: raw.dailyRatings ?? {},
+    dayCardBackgrounds: raw.dayCardBackgrounds ?? {},
     calendarMode: raw.calendarMode ?? 'quality',
     onboarding: { ...migratedOnboarding, usernamePromptCompleted: Boolean(migratedOnboarding?.usernamePromptCompleted || profile.username) },
     profile: { ...profile, username: profile.username ?? '' }, sessions, timer: timerData,

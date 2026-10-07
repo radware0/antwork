@@ -9,16 +9,16 @@ import { buildDocs } from './docs.mjs';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const production = process.argv.includes('--build');
 const desktop = process.argv.includes('--desktop');
-const outputDir = fileURLToPath(new URL('../dist/', import.meta.url));
+const outputDir = fileURLToPath(new URL(desktop ? '../app-dist/' : '../dist/', import.meta.url));
 if (production) {
   if (resolve(outputDir, '..') !== resolve(root)) throw new Error('Refusing to clear output outside the project root');
   await rm(outputDir, { recursive: true, force: true });
 }
-await mkdir(root + 'dist', { recursive: true });
-await cp(root + 'public', root + 'dist', { recursive: true });
+await mkdir(outputDir, { recursive: true });
+await cp(root + 'public', outputDir, { recursive: true });
 const html = (await readFile(root + 'index.html', 'utf8')).replace(/<script type="module"[^>]*><\/script>/, '<link rel="stylesheet" href="/assets/main.css"><script type="module" src="/assets/main.js"></script>');
-await writeFile(root + 'dist/index.html', html);
-await buildDocs({ desktop });
+await writeFile(resolve(outputDir, 'index.html'), html);
+await buildDocs({ desktop, outputDir: resolve(outputDir, 'docs') });
 const tailwindPlugin = {
   name: 'antwork-tailwind',
   setup(build) {
@@ -32,15 +32,15 @@ const tailwindPlugin = {
     });
   },
 };
-const options = { absWorkingDir: root, entryPoints: { main: desktop ? 'src/main.tsx' : 'src/site.tsx' }, bundle: true, splitting: true, outdir: 'dist/assets', format: 'esm', jsx: 'automatic', target: 'es2022', minify: production, sourcemap: !production, external: ['/fonts/*'], loader: { '.woff': 'file', '.woff2': 'file' }, alias: { '@': root + 'src' }, plugins: [tailwindPlugin], define: { 'process.env.NODE_ENV': JSON.stringify(production ? 'production' : 'development') }, logLevel: 'info' };
+const options = { absWorkingDir: root, entryPoints: { main: desktop ? 'src/main.tsx' : 'src/site.tsx' }, bundle: true, splitting: true, outdir: resolve(outputDir, 'assets'), format: 'esm', jsx: 'automatic', target: 'es2022', minify: production, sourcemap: !production, external: ['/fonts/*'], loader: { '.woff': 'file', '.woff2': 'file' }, alias: { '@': root + 'src' }, plugins: [tailwindPlugin], define: { 'process.env.NODE_ENV': JSON.stringify(production ? 'production' : 'development') }, logLevel: 'info' };
 if (production) await build(options);
 else {
  const ctx = await context(options);
  await ctx.watch();
  const docsWatcher = watch(root + 'docs', { recursive: true }, () => {
-   void buildDocs({ desktop }).catch(error => console.error('Could not rebuild docs:', error));
+   void buildDocs({ desktop, outputDir: resolve(outputDir, 'docs') }).catch(error => console.error('Could not rebuild docs:', error));
  });
- const { port } = await ctx.serve({ servedir: root + 'dist', host: '127.0.0.1', port: 5173 });
+ const { port } = await ctx.serve({ servedir: outputDir, host: '127.0.0.1', port: desktop ? 5174 : 5173 });
  console.log('antwork: http://localhost:' + port);
  process.on('SIGINT', async () => { docsWatcher.close(); await ctx.dispose(); process.exit(0); });
 }

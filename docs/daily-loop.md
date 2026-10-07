@@ -18,4 +18,6 @@ The journal holds one private note per day. Saved text is readable on Dashboard 
 
 ## Keep your own copy
 
-Profile's **Local backup** exports the complete record as JSON. Import validates the file and asks before replacing local history. Backups include notes, profile images, and other personal content and are not encrypted. Store them accordingly. See [Data and privacy](/docs/privacy/).
+For a date with saved work, **View day card** in Calendar opens a daily achievement: saved hours and your whole-day rating. Customize it with one picture or silent looping video. Background changes use Save and Cancel like the timer; cards exclude unfinished timer time.
+
+Profile's **Local backup** exports the complete record as JSON, including day-card pictures and videos. Import validates the file and asks before replacing local history. Backups include notes, profile images, and other personal content and are not encrypted. Store them accordingly. See [Data and privacy](/docs/privacy/).

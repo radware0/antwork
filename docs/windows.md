@@ -4,7 +4,7 @@ The Windows app keeps Dashboard, Timers, Calendar, Work Hours, and Profile avail
 
 ## Install and open
 
-Run `antwork-1.0.0-Setup.exe`. Choose whether to install for your Windows user account or everyone, then choose the installation folder. Installing for everyone requests administrator access. The wizard displays progress while it installs. It bundles Electron, so you do not need Node.js or a development server. Launch antwork from its shortcut after installation. This build is unsigned; Windows security may warn or block it. No security setting is changed by antwork.
+Run the installer from the latest release. Choose whether to install for your Windows user account or everyone, then choose the installation folder. Installing for everyone requests administrator access. The wizard displays progress while it installs. It bundles Electron, so you do not need Node.js or a development server. Launch antwork from its shortcut after installation. This build is unsigned; Windows security may warn or block it. No security setting is changed by antwork.
 
 The installed app works offline. Documentation opens in a separate window so opening Docs does not interrupt your timer. Valid web links open in your default browser and need a connection to visit their websites.
 
@@ -16,7 +16,7 @@ If you exported a JSON backup from the former web app:
 2. Select your backup and review **Replace local history**. Export any existing desktop history first if you need it.
 3. Confirm the replacement.
 
-The website now serves the download page and Docs. It does not open or delete the browser's previous history. Browser and desktop profiles are separate. Backups contain readable personal text and images. Current exports use schema version 5; this build imports versions 1 through 5 with a 32 MiB file limit.
+The website now serves the download page and Docs. It does not open or delete the browser's previous history. Browser and desktop profiles are separate. Backups contain readable personal text, images, and day-card videos. Current exports use schema version 6; this build imports versions 1 through 6 with a 32 MiB file limit. The v1.0.0 app cannot import schema-6 backups.
 
 ## Timer behavior
 

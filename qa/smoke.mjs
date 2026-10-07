@@ -21,7 +21,7 @@ await page.addInitScript(() => {
 });
 const errors = [];
 page.on('pageerror', error => errors.push(error.message));
-const base = process.env.QA_BASE_URL ?? 'http://localhost:5173/';
+const base = process.env.QA_BASE_URL ?? 'http://localhost:5174/';
 const dock = page.getByRole('navigation', { name: 'Main navigation' });
 const nav = async name => { await dock.getByRole('button', { name, exact: true }).click(); await page.getByRole('heading', { name, exact: true }).waitFor(); };
 const readData = () => page.evaluate(() => new Promise(resolve => {
@@ -45,7 +45,7 @@ const samplePng = async () => Buffer.from(await page.evaluate(() => {
 try {
   await page.goto(base, { waitUntil: 'networkidle' });
   await page.getByRole('heading', { name: 'Dashboard', exact: true }).waitFor();
-  assert.equal((await readData()).schemaVersion, 5);
+  assert.equal((await readData()).schemaVersion, 6);
   assert.equal((await readData()).theme, 'black');
   assert.equal((await readData()).sessions.length, 0, 'workflow starts in an isolated empty browser context');
   assert.deepEqual((await readData()).timerPanel, { image: null, imageOpacity: 30, imageBlur: 0, preferredWidth: 640, preferredHeight: null });

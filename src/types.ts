@@ -91,13 +91,17 @@ export interface OnboardingSettings {
   usernamePromptCompleted: boolean;
 }
 
+export type DayCardBackground = { kind: 'image'; data: string }
+  | { kind: 'video'; data: string; durationSeconds: number };
+
 export interface AppData {
-  schemaVersion: 5;
+  schemaVersion: 6;
   setupDate: DateKey;
   setupComplete: boolean;
   weeklyTargets: number[];
   dailyTargets: Record<DateKey, number>;
   dailyRatings: Record<DateKey, DayQuality>;
+  dayCardBackgrounds: Record<DateKey, DayCardBackground>;
   calendarMode: CalendarMode;
   theme: Theme;
   preferences: SoundPreferences;

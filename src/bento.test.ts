@@ -60,7 +60,7 @@ test('versions one through three preserve old history and acquire empty local ha
   for (const schemaVersion of [1, 2, 3]) {
     const base = createInitialData('2026-09-29');
     const migrated = validateImport({ ...base, schemaVersion, profile: { ...base.profile, currentCampaignId: null }, sessions: [original] });
-    assert.equal(migrated.schemaVersion, 5);
+    assert.equal(migrated.schemaVersion, 6);
     assert.equal(migrated.profile.username, '');
     assert.equal(migrated.sessions[0].timing, 'intervals');
     assert.deepEqual(migrated.sessions[0].intervals, original.intervals);

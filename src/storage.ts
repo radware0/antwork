@@ -31,6 +31,16 @@ export function assertBackupImportSize(bytes: number): void {
   if (bytes > MAX_BACKUP_IMPORT_BYTES) throw new Error('Backup is too large for this beta (32 MiB maximum).');
 }
 
+export function serializeBackup(data: AppData): string { return JSON.stringify(data, null, 2); }
+
+export function assertBackupWriteSize(current: AppData, next: AppData): void {
+  // ponytail: bounded media stays in one document; use a media store if larger collections are needed.
+  const bytes = new TextEncoder().encode(serializeBackup(next)).byteLength;
+  if (bytes > MAX_BACKUP_IMPORT_BYTES && bytes > new TextEncoder().encode(serializeBackup(current)).byteLength) {
+    throw new Error('This change would exceed the 32 MiB backup limit. Remove a day background to free space. Your saved history is unchanged.');
+  }
+}
+
 export class IndexedDbLedgerRepository implements LedgerRepository {
   async load(): Promise<AppData> {
     return this.update(data => data);
@@ -47,6 +57,7 @@ export class IndexedDbLedgerRepository implements LedgerRepository {
         try {
           const current = validateImport(request.result ?? createInitialData(dateKey()));
           result = validateImport(change(structuredClone(current)));
+          assertBackupWriteSize(current, result);
           store.put(result, KEY);
         } catch (error) {
           tx.abort();

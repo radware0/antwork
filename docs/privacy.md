@@ -2,7 +2,7 @@
 
 Your work history lives on your computer in the Windows app's IndexedDB profile. The app has no account, analytics, tracking service, cloud database, or sync endpoint. The website is a download page and documentation; it does not access your work history.
 
-The local profile and backups are unencrypted. Someone with access to either may be able to read the data. JSON backups include free text and profile images in readable form. Keep a backup somewhere you trust so you can restore your history after changing computers or deleting the app's profile. The app accepts backup files up to 32 MiB; a very large history may exceed that import limit.
+The local profile and backups are unencrypted. Someone with access to either may be able to read the data. JSON backups include free text, profile images, and day-card pictures and videos. Keep a backup somewhere you trust so you can restore your history after changing computers or deleting the app's profile. The app accepts backup files up to 32 MiB. New changes that grow beyond this size are rejected so exported history remains importable; existing larger legacy history remains readable and can be reduced.
 
 ## Windows desktop history
 

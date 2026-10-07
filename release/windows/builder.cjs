@@ -7,7 +7,7 @@ module.exports = {
   npmRebuild: false,
   directories: { app: path.join(__dirname, 'app'), output: path.join(__dirname, 'out') },
   files: [
-    'dist/**/*',
+    'app-dist/**/*',
     'desktop-dist/**/*',
     'package.json',
     'THIRD_PARTY_NOTICES.md',

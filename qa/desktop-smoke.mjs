@@ -109,7 +109,7 @@ const closeNormally = async () => {
     const window = BrowserWindow.getAllWindows().find(window => !window.webContents.getURL().includes('timer=popout'));
     window.setPosition(40, 40); window.showInactive();
   });
-  const closed = app.waitForEvent('close');
+  const closed = app.waitForEvent('close', { timeout: 15000 });
   await page.getByRole('button', { name: 'Close antwork', exact: true }).click();
   await closed;
   app = null;

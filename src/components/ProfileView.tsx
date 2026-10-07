@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { dateKey } from '../domain.ts';
-import { assertBackupImportSize, validateImport } from '../storage.ts';
+import { assertBackupImportSize, serializeBackup, validateImport } from '../storage.ts';
+import { validateDayCardPlayback } from '../dayCardMedia.ts';
 import { CareerOverview } from './ProfileIdentity.tsx';
 import { Modal } from './Modal.tsx';
 import type { Mutate } from '../ui.ts';
@@ -38,9 +39,10 @@ export function ProfileView({ data, now, mutate, replace }: { data: AppData; now
   const [imported, setImported] = useState<AppData | null>(null);
   const [backupMessage, setBackupMessage] = useState('');
   const [replacing, setReplacing] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [campaignBusy, setCampaignBusy] = useState(false);
   const exportData = () => {
-    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+    const url = URL.createObjectURL(new Blob([serializeBackup(data)], { type: 'application/json' }));
     const anchor = document.createElement('a');
     anchor.href = url; anchor.download = 'antwork-' + dateKey(now) + '.json'; anchor.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
@@ -63,11 +65,12 @@ export function ProfileView({ data, now, mutate, replace }: { data: AppData; now
         </article>)}
       </section>
       <div className="page-stack">
-        <section className="panel"><div className="panel-heading"><h2>Local backup</h2></div><p className="muted">Keep a copy of your history outside this browser.</p><div className="button-row backup-actions"><button className="button" onClick={exportData}>Export JSON</button><label className="button file-button">Import JSON<input type="file" accept="application/json,.json" onChange={async event => {
+        <section className="panel"><div className="panel-heading"><h2>Local backup</h2></div><p className="muted">Keep a copy of your history outside this browser.</p><div className="button-row backup-actions"><button className="button" onClick={exportData}>Export JSON</button><label className="button file-button">Import JSON<input type="file" accept="application/json,.json" disabled={importing || replacing} onChange={async event => {
           const file = event.target.files?.[0]; if (!file) return;
-          try { assertBackupImportSize(file.size); setImported(validateImport(JSON.parse(await file.text()))); setBackupMessage(''); }
+          setImporting(true); setBackupMessage('Checking backup…');
+          try { assertBackupImportSize(file.size); const parsed = validateImport(JSON.parse(await file.text())); await validateDayCardPlayback(parsed.dayCardBackgrounds); setImported(parsed); setBackupMessage(''); }
           catch (cause) { setBackupMessage(cause instanceof Error ? cause.message : 'Could not import backup.'); }
-          event.target.value = '';
+          finally { event.target.value = ''; setImporting(false); }
         }} /></label></div>{backupMessage && <p className="muted" role="status">{backupMessage}</p>}</section>
       </div>
     </div>

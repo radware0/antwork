@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { dateKey, sessionDays, setDayRating } from '../domain.ts';
+import { dateKey, dailyWorkedMinutes, sessionDays, setDayRating } from '../domain.ts';
 import { calendarSummary, dailySummary, dayQualityLabels, displayDate, hoursLabel } from '../ui.ts';
 import type { Mutate } from '../ui.ts';
 import type { AppData, CalendarMode, DateKey, DayQuality } from '../types.ts';
 import { JournalView } from './JournalView.tsx';
+import { DayCard } from './DayCard.tsx';
 
 const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -85,7 +86,10 @@ export function CalendarView(props: CalendarProps) {
 }
 
 export function DayDetails({ data, day, now, mutate }: { data: AppData; day: DateKey; now: number; mutate: Mutate }) {
+  const [cardDay, setCardDay] = useState<DateKey | null>(null);
+  const [removing, setRemoving] = useState(false);
   const summary = dailySummary(data, day, now);
+  const eligible = day <= dateKey(now) && dailyWorkedMinutes(data.sessions, day) > 0;
   const sessions = data.sessions.filter(item => (sessionDays(item)[day] ?? 0) > 0);
   return (
     <div className="day-details">
@@ -93,9 +97,17 @@ export function DayDetails({ data, day, now, mutate }: { data: AppData; day: Dat
         <div className="panel-heading"><h2>{displayDate(day)}</h2><span className={'result ' + summary.color}>{hoursLabel(summary.minutes)}</span></div>
         <div className="stat-line"><span>Deep work</span><strong>{hoursLabel(summary.minutes)}</strong></div>
         <div className="stat-line"><span>Sessions</span><strong>{sessions.length}</strong></div>
+        {eligible && <button type="button" className="button" aria-haspopup="dialog" onClick={() => setCardDay(day)}>View day card</button>}
+        {!eligible && data.dayCardBackgrounds[day] && <button type="button" className="button subtle" disabled={removing} onClick={async () => {
+          setRemoving(true);
+          try { await mutate(current => { const dayCardBackgrounds = { ...current.dayCardBackgrounds }; delete dayCardBackgrounds[day]; return { ...current, dayCardBackgrounds }; }); }
+          catch { /* The shared error banner reports persistence failures. */ }
+          finally { setRemoving(false); }
+        }}>Remove day background</button>}
       </section>
       <DayRating key={day} data={data} day={day} now={now} mutate={mutate} />
       <JournalView data={data} day={day} mutate={mutate} />
+      {cardDay && <DayCard key={cardDay} data={data} day={cardDay} mutate={mutate} onClose={() => setCardDay(null)} />}
     </div>
   );
 }
