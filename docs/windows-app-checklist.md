@@ -10,7 +10,7 @@ The first desktop release is for personal use, before trusted testers. It uses E
 
 antwork is a React and TypeScript app with a static esbuild output. It has local fonts, hash navigation, and no application backend. The build emits `/assets/`, `/fonts/`, and `/docs/` URLs that the desktop environment must resolve. See [the build script](../scripts/app.mjs), [architecture](architecture.md), and [package metadata](../package.json).
 
-History lives in IndexedDB. A desktop browser profile will not automatically contain the history from the existing website. JSON export/import is the current transfer path; importing replaces history. Backups support schema versions 1–6 and a 32 MiB input limit. See [storage](../src/storage.ts), [backup controls](../src/components/ProfileView.tsx), and [validation](../src/validation.ts).
+History lives in IndexedDB. A desktop browser profile will not automatically contain the history from the existing website. JSON export/import is the current transfer path; importing replaces history. The refreshed v1.1.0 build supports schema versions 1–7 and a 32 MiB input limit. Schema-7 exports require the refreshed installer, including for users who already installed the original v1.1.0 build. See [storage](../src/storage.ts), [backup controls](../src/components/ProfileView.tsx), and [validation](../src/validation.ts).
 
 Browser timer recovery uses persisted wall-clock timestamps. The desktop bridge now pauses at sleep or close and recovers an interrupted timer as paused at its durable checkpoint. Minimize and screen lock keep it running. Alarms run in the renderer, so a fully exited app cannot sound them. See [timer calculations](../src/domain.ts), [desktop lifecycle](../desktop/runtime.cjs), [timer recovery](../src/useLedger.ts), and [sound](../src/sound.ts).
 
@@ -138,7 +138,7 @@ Validation: production compilation, 67 unit tests, browser smoke across five pag
 
 Installer: `out/make/squirrel.windows/x64/antwork-0.1.5-Setup.exe` (153,914,368 bytes), unsigned. SHA-256: `2b5ba53ce16faffa9d1201e082d00ccaed558fba7d1f8e0c92743de8f740cc29`.
 
-## v1.1.0 worked-day cards - October 8, 2026
+## Original v1.1.0 worked-day cards - October 8, 2026
 
 Calendar now opens an achievement card for today or past dates with saved work. It shows saved hours and the manual day rating, with one optional picture or silent looping MP4/WebM background. The screenshot review removed playback controls and the opaque popup frame; text shadows and a borderless day-quality label replace the dim overlay and badge. Videos run while visible, including with reduced motion enabled, and stop when hidden or closed.
 
@@ -156,3 +156,18 @@ Validation on Windows 11 Pro x64:
 Installer: `release/windows/out/antwork-1.1.0-Setup.exe` (111,739,652 bytes), unsigned. SHA-256: `8e7c407f6920c0d2e29f96b464000ec850e1433b4f276e143232801b87d1de88`.
 
 Windows 10, clean-machine NSIS walkthroughs for both scopes, actual installer replacement, physical sleep, Narrator, and multi-monitor scaling remain tester checks. Previous Squirrel installer results remain historical. The [v1.1.0 release notes](../release/windows/v1.1.0.md) include these limits and manual backup/update instructions.
+
+## Refreshed v1.1.0 shared backgrounds - October 10, 2026
+
+This update replaces the existing v1.1.0 installer and release notes without a version bump or new release. Calendar saves up to two picture/video choices; one selection applies to all day cards. The editor remains available without saved work. Older per-date media stays intact until a confirmed shared save, with backup export offered first. Backups now use schema 7 and import schemas 1 through 7; v1.0.0 and the original v1.1.0 build cannot read the new exports.
+
+Validation on Windows 11 Pro x64:
+
+- All 74 unit tests passed. Production website and Windows installer builds passed.
+- Production website smoke passed download links, both themes, keyboard controls, responsive layout, preserved browser history, and Docs theme synchronization.
+- Packaged day-card checks passed shared selection across dates, two slots, removal and blank cards, older-media confirmation/export, backup restoration, failure retention, bounded uploads, silent looping video playback, native visibility, themes, narrow windows, and temporary URL cleanup. Evidence: `.qa/day-cards-18f1ca87-8114-4b43-b729-b5be553b4205/`.
+- Packaged desktop smoke passed offline navigation and Docs, renderer isolation, window/tray/pop-out controls, timer synchronization, sleep-event pause, JSON transfer, close/reopen, and crash recovery. Evidence: `.qa/desktop-56f50eee-be44-40f4-9a1b-6863a17b5345/`.
+- The original v1.1.0 app and refreshed binary used the same isolated profile successfully. History, settings, a paused timer, and all three older per-date backgrounds survived. Evidence: `.qa/upgrade-cc621886-6937-4e7c-ace8-ae87ad3ad5fe/result.json`. Actual installer replacement was not tested.
+- Package audit verified all 30 build files and third-party notices against the archive. It contains only `app-dist/`, `desktop-dist/`, package metadata, and notices. Evidence: `.qa/release-refresh-v1.1.0/package-audit.json`.
+
+Replacement installer: `release/windows/out/antwork-1.1.0-Setup.exe` (111,741,556 bytes), unsigned. SHA-256: `5ead349844c53d6a572e90c3485db757d4d620571788e956422dec1f35e5f430`. The compatibility and installer checks listed above remain open.

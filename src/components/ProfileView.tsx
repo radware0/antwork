@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { dateKey } from '../domain.ts';
-import { assertBackupImportSize, serializeBackup, validateImport } from '../storage.ts';
+import { assertBackupImportSize, downloadBackup, validateImport } from '../storage.ts';
 import { validateDayCardPlayback } from '../dayCardMedia.ts';
 import { CareerOverview } from './ProfileIdentity.tsx';
 import { Modal } from './Modal.tsx';
@@ -41,12 +40,7 @@ export function ProfileView({ data, now, mutate, replace }: { data: AppData; now
   const [replacing, setReplacing] = useState(false);
   const [importing, setImporting] = useState(false);
   const [campaignBusy, setCampaignBusy] = useState(false);
-  const exportData = () => {
-    const url = URL.createObjectURL(new Blob([serializeBackup(data)], { type: 'application/json' }));
-    const anchor = document.createElement('a');
-    anchor.href = url; anchor.download = 'antwork-' + dateKey(now) + '.json'; anchor.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-  };
+  const exportData = () => downloadBackup(data, now);
   return <div className="page-stack profile-page">
     <div className="page-title"><div><h1>Profile</h1><p>Your career</p></div></div>
     <CareerOverview data={data} now={now} />
@@ -68,7 +62,7 @@ export function ProfileView({ data, now, mutate, replace }: { data: AppData; now
         <section className="panel"><div className="panel-heading"><h2>Local backup</h2></div><p className="muted">Keep a copy of your history outside this browser.</p><div className="button-row backup-actions"><button className="button" onClick={exportData}>Export JSON</button><label className="button file-button">Import JSON<input type="file" accept="application/json,.json" disabled={importing || replacing} onChange={async event => {
           const file = event.target.files?.[0]; if (!file) return;
           setImporting(true); setBackupMessage('Checking backup…');
-          try { assertBackupImportSize(file.size); const parsed = validateImport(JSON.parse(await file.text())); await validateDayCardPlayback(parsed.dayCardBackgrounds); setImported(parsed); setBackupMessage(''); }
+          try { assertBackupImportSize(file.size); const parsed = validateImport(JSON.parse(await file.text())); await validateDayCardPlayback(parsed); setImported(parsed); setBackupMessage(''); }
           catch (cause) { setBackupMessage(cause instanceof Error ? cause.message : 'Could not import backup.'); }
           finally { event.target.value = ''; setImporting(false); }
         }} /></label></div>{backupMessage && <p className="muted" role="status">{backupMessage}</p>}</section>

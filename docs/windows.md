@@ -16,7 +16,7 @@ If you exported a JSON backup from the former web app:
 2. Select your backup and review **Replace local history**. Export any existing desktop history first if you need it.
 3. Confirm the replacement.
 
-The website now serves the download page and Docs. It does not open or delete the browser's previous history. Browser and desktop profiles are separate. Backups contain readable personal text, images, and day-card videos. Current exports use schema version 6; this build imports versions 1 through 6 with a 32 MiB file limit. The v1.0.0 app cannot import schema-6 backups.
+The website now serves the download page and Docs. It does not open or delete the browser's previous history. Browser and desktop profiles are separate. Backups contain readable personal text, both shared background choices, and any older per-date media awaiting replacement. The refreshed v1.1.0 build exports schema version 7 and imports versions 1 through 7 with a 32 MiB file limit. v1.0.0 and the original v1.1.0 build cannot import schema-7 backups. Upgrading preserves older backgrounds until a shared save explicitly confirms their replacement and offers backup export.
 
 ## Timer behavior
 
@@ -37,7 +37,7 @@ A countdown cannot finish from time spent asleep or with the app closed. Its ala
 
 ## Update or remove
 
-Updates are manual. Export a backup, close antwork, then run the newer installer. If upgrading from a 0.1.x Squirrel build, uninstall that old app through Windows Settings first; it used a different installation location. The app keeps the same local profile across updates.
+Updates are manual. Export a backup, close antwork, then run the updated installer. The shared-background update replaces the existing v1.1.0 release without changing its version number, so download and run it again if you installed the original build. If upgrading from a 0.1.x Squirrel build, uninstall that old app through Windows Settings first; it used a different installation location. The app keeps the same local profile across updates.
 
 Uninstall through Windows Settings. Your history remains under `%APPDATA%\antwork` until you explicitly delete it; reinstalling lets you use it again. To remove that history, close the app and delete that folder. Backups stay wherever you exported them.
 

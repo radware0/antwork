@@ -14,7 +14,8 @@ const env = { ...process.env, ANTWORK_TEST_USER_DATA_DIR: path.join(directory, '
 delete env.ELECTRON_RUN_AS_NODE;
 const asar = createRequire(import.meta.url)('@electron/asar');
 const version = executable => JSON.parse(asar.extractFile(path.join(path.dirname(executable), 'resources', 'app.asar'), 'package.json')).version;
-assert.equal(version(oldExecutable), '1.0.0'); assert.equal(version(newExecutable), '1.1.0');
+const oldVersion = version(oldExecutable);
+assert.ok(['1.0.0', '1.1.0'].includes(oldVersion)); assert.equal(version(newExecutable), '1.1.0');
 let app;
 const open = async executable => {
   app = await _electron.launch({ executablePath: path.resolve(executable), args: ['--no-error-dialogs'], env });
@@ -28,9 +29,14 @@ const read = page => page.evaluate(() => new Promise(resolve => {
 }));
 try {
   let page = await open(oldExecutable);
-  const baseline = await read(page); assert.equal(baseline.schemaVersion, 5);
+  const baseline = await read(page); assert.equal(baseline.schemaVersion, oldVersion === '1.0.0' ? 5 : 6);
   const image = await page.evaluate(() => { const canvas = document.createElement('canvas'); canvas.width = 32; canvas.height = 32; canvas.getContext('2d').fillRect(0, 0, 32, 32); return canvas.toDataURL('image/webp'); });
   const now = Date.now(), date = baseline.setupDate;
+  if (baseline.schemaVersion === 6) baseline.dayCardBackgrounds = {
+    [date]: { kind: 'image', data: image },
+    '2000-01-01': { kind: 'image', data: image },
+    '2000-01-02': { kind: 'image', data: image },
+  };
   baseline.profile = { ...baseline.profile, name: 'Synthetic upgrade user', bio: 'Keep local identity', avatar: image };
   baseline.dailyRatings = { [date]: 'steady' }; baseline.calendarMode = 'hours';
   baseline.timerPanel = { ...baseline.timerPanel, image, imageOpacity: 72, imageBlur: 4, preferredWidth: 720, preferredHeight: 500 };
@@ -51,7 +57,8 @@ try {
   await app.close(); app = null;
   page = await open(newExecutable);
   const migrated = await read(page);
-  assert.equal(migrated.schemaVersion, 6); assert.deepEqual(migrated.dayCardBackgrounds, {});
+  assert.equal(migrated.schemaVersion, 7); assert.deepEqual(migrated.dayCardBackgrounds, saved.dayCardBackgrounds ?? {});
+  assert.deepEqual(migrated.dayCardPreferences, { backgrounds: [null, null], selectedIndex: null });
   for (const field of ['sessions', 'journals', 'dailyRatings', 'calendarMode', 'profile', 'timerPanel', 'preferences', 'campaigns']) assert.deepEqual(migrated[field], saved[field], field + ' survives upgrade');
   assert.equal(migrated.timer.id, 'active'); assert.equal(migrated.timer.runningSince, null);
   assert.ok(migrated.timer.accumulatedMs >= saved.timer.accumulatedMs);
@@ -59,6 +66,6 @@ try {
   await page.getByRole('button', { name: 'View day card', exact: true }).click();
   await page.getByRole('dialog', { name: 'Day card', exact: true }).waitFor();
   assert.equal(await page.locator('.day-card-quality').innerText(), 'Steady');
-  await writeFile(path.join(directory, 'result.json'), JSON.stringify({ passed: true, oldVersion: '1.0.0', newVersion: '1.1.0', checks: ['precise and dated hours', 'journals', 'ratings', 'identity', 'images', 'settings', 'campaigns', 'paused timer', 'day card'], installerReplacementTested: false }, null, 2));
-  console.log('Same-profile v1.0.0-to-v1.1.0 app upgrade passed. Evidence: ' + directory);
+  await writeFile(path.join(directory, 'result.json'), JSON.stringify({ passed: true, oldVersion, newVersion: '1.1.0', newSchemaVersion: 7, checks: ['precise and dated hours', 'journals', 'ratings', 'identity', 'images', 'settings', 'campaigns', 'paused timer', 'day card', 'older per-date background preservation'], installerReplacementTested: false }, null, 2));
+  console.log(`Same-profile v${oldVersion}-to-refreshed-v1.1.0 app upgrade passed. Evidence: ${directory}`);
 } finally { if (app) await app.close(); }

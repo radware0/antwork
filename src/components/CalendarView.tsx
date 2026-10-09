@@ -19,6 +19,7 @@ type CalendarProps = {
 export function CalendarView(props: CalendarProps) {
   const { data, now, month, onMonth, mutate } = props;
   const [saving, setSaving] = useState(false);
+  const [editingBackgrounds, setEditingBackgrounds] = useState(false);
   const qualityMode = data.calendarMode === 'quality';
   const changeMode = async (calendarMode: CalendarMode) => {
     if (saving || calendarMode === data.calendarMode) return;
@@ -46,6 +47,7 @@ export function CalendarView(props: CalendarProps) {
           <button className="button subtle" onClick={() => { onMonth(currentMonth); if (props.mode === 'interactive') props.onSelect(today); }}>Today</button>
           <button className="icon-button" aria-label="Next month" onClick={() => onMonth(dateKey(new Date(year, monthNumber, 1)))}><ChevronRight size={16} /></button>
           {props.mode === 'overview' && <button className="button calendar-open" onClick={props.onOpen}>Open Calendar</button>}
+          {props.mode === 'interactive' && <button className="button subtle" aria-haspopup="dialog" onClick={() => setEditingBackgrounds(true)}>Day-card backgrounds</button>}
         </div>
       </div>
       <div className="calendar-display-controls">
@@ -81,6 +83,7 @@ export function CalendarView(props: CalendarProps) {
             : <button type="button" key={day} className={className} onClick={() => props.onSelect(day)} aria-label={label}>{content}</button>;
         })}
       </div>
+      {props.mode === 'interactive' && editingBackgrounds && <DayCard data={data} day={props.selectedDay} mutate={mutate} editOnly onClose={() => setEditingBackgrounds(false)} />}
     </section>
   );
 }

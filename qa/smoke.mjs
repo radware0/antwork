@@ -45,7 +45,7 @@ const samplePng = async () => Buffer.from(await page.evaluate(() => {
 try {
   await page.goto(base, { waitUntil: 'networkidle' });
   await page.getByRole('heading', { name: 'Dashboard', exact: true }).waitFor();
-  assert.equal((await readData()).schemaVersion, 6);
+  assert.equal((await readData()).schemaVersion, 7);
   assert.equal((await readData()).theme, 'black');
   assert.equal((await readData()).sessions.length, 0, 'workflow starts in an isolated empty browser context');
   assert.deepEqual((await readData()).timerPanel, { image: null, imageOpacity: 30, imageBlur: 0, preferredWidth: 640, preferredHeight: null });

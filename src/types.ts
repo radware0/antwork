@@ -94,14 +94,21 @@ export interface OnboardingSettings {
 export type DayCardBackground = { kind: 'image'; data: string }
   | { kind: 'video'; data: string; durationSeconds: number };
 
+export interface DayCardPreferences {
+  backgrounds: [DayCardBackground | null, DayCardBackground | null];
+  selectedIndex: 0 | 1 | null;
+}
+
 export interface AppData {
-  schemaVersion: 6;
+  schemaVersion: 7;
   setupDate: DateKey;
   setupComplete: boolean;
   weeklyTargets: number[];
   dailyTargets: Record<DateKey, number>;
   dailyRatings: Record<DateKey, DayQuality>;
+  // Older per-date media stays intact until the user confirms shared-background replacement.
   dayCardBackgrounds: Record<DateKey, DayCardBackground>;
+  dayCardPreferences: DayCardPreferences;
   calendarMode: CalendarMode;
   theme: Theme;
   preferences: SoundPreferences;

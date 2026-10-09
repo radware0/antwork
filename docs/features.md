@@ -28,11 +28,15 @@ Profile shows total saved deep work, best saved day by hours, longest saved sess
 
 Select today or a past date with saved work in Calendar, then choose **View day card**. The popup shows that date, combined saved hours, and your Good, Steady, Rough, or Unrated day quality. Work crossing midnight contributes only its portion on that date. Unfinished timer time stays outside the card total; work corrections and rating changes update the card.
 
-Choose **Customize card** to add one picture or video background for the date. PNG, JPEG, and WebP pictures up to 10 MiB use the timer's local WebP processing. MP4 and WebM videos accept up to 5 MiB and 30 seconds and must be playable by the app. Videos loop silently and automatically while the card is visible, independent of interface sound and motion preferences. The card has no playback controls. Hidden or closed cards stop playback. Text shadows keep the hours and borderless day-quality label readable over the background; an empty card has a transparent background.
+Choose **Day-card backgrounds** from Calendar or a day card to save up to two pictures or videos. Select one background and it applies to every date's card; there is no need to upload it for each day. Cards start without media. **No background** keeps your saved choices but displays neither. Removing the selected choice selects the remaining background, or leaves cards blank when neither exists.
 
-Save background applies the draft. Cancel and Escape discard unsaved changes. A failed save retains the draft for retry. Backgrounds stay associated with their date when sessions change. If all work on that date is deleted, Calendar still offers **Remove day background** to free space.
+PNG, JPEG, and WebP pictures up to 10 MiB use the timer's local WebP processing. MP4 and WebM videos accept up to 5 MiB and 30 seconds and must be playable by the app. Videos loop silently and automatically while the card or preview is visible, independent of interface sound and motion preferences. The card has no playback controls. Hidden or closed cards stop playback. Text shadows keep the hours and borderless day-quality label readable over the background; an empty card has a transparent background.
 
-Pictures and videos are included in schema-6 JSON backups. Changes that grow the complete formatted backup beyond 32 MiB are rejected with an instruction to remove a background. Existing larger legacy history remains readable and can be reduced without truncation.
+**Save backgrounds** applies the draft to all day cards. Cancel and Escape discard unsaved changes. A failed save retains the draft for retry. Background choices survive session edits and deletions, and Calendar's editor remains available without any saved work.
+
+Upgrading or importing older backups preserves every per-date background until shared settings are saved. The editor starts with the viewed date's old background in the first slot when available. It offers **Export JSON** and requires **Replace all older per-date backgrounds** before saving. A confirmed save replaces the old collection with the shared choices; Cancel or a failed save preserves the whole old collection. Old backgrounds on dates without saved work can still be removed individually with **Remove day background**.
+
+Both shared choices and any older media awaiting replacement are included in schema-7 JSON backups. v1.0.0 and the original v1.1.0 build cannot import this format; use the refreshed v1.1.0 installer. Changes that grow the complete formatted backup beyond 32 MiB are rejected with an instruction to remove a background. Existing larger legacy history remains readable and can be reduced without truncation.
 
 ## Sound and appearance
 

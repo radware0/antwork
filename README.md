@@ -4,6 +4,8 @@ antwork is a Windows app for timing your work and keeping a record of it. Start 
 
 [Download v1.1.0 for Windows](https://github.com/radware0/antwork/releases/tag/v1.1.0). The [website](https://antwork-five.vercel.app/) now points to the app download and documentation.
 
+The refreshed v1.1.0 download includes shared day-card backgrounds. If you already installed v1.1.0, download and run the replacement installer to get this update.
+
 The app works offline. Everything is saved on your computer, with no accounts or cloud sync.
 
 ## Install
@@ -20,7 +22,9 @@ Start a session from Dashboard or Timers. The timer keeps running while minimize
 
 Use **Pop out timer** for a separate window you can move and resize. It stays in sync with the main window. You can add a local background image and adjust its opacity and blur. The app starts in Black; the theme toggle switches between Black and White.
 
-In Calendar, select a date with saved work and choose **View day card**. The card shows saved hours and your Good, Steady, Rough, or Unrated day quality. Add one picture or silent looping video background per date. Videos loop automatically without playback controls; the transparent popup uses text shadows and a borderless day-quality label.
+In Calendar, select a date with saved work and choose **View day card**. The card shows saved hours and your Good, Steady, Rough, or Unrated day quality. **Day-card backgrounds** saves up to two pictures or silent looping videos; select one and it applies to every day card. Cards start without media. The same editor is available from Calendar even when there is no saved work. Videos loop automatically without playback controls; the transparent popup uses text shadows and a borderless day-quality label.
+
+Upgrading preserves older per-date backgrounds. Saving shared choices offers a backup export and requires confirmation before replacing all older backgrounds. Cancel leaves them intact.
 
 Profile shows your career statistics. Profile identity editing and username onboarding have been retired, but existing identity data stays in backups. Campaign descriptions are optional.
 
@@ -28,7 +32,7 @@ Profile shows your career statistics. Profile identity editing and username onbo
 
 Desktop history lives in `%APPDATA%\antwork` and survives uninstall. Updates are manual: export a backup, close the app, and run the newer installer.
 
-Use Profile's JSON export to keep a backup. Backups contain readable personal text, images, and day-card videos. Importing replaces the destination history, so export that history first if you need it. Current exports use schema version 6; this build imports versions 1 through 6 with a 32 MiB limit. The v1.0.0 app cannot read schema-6 backups.
+Use Profile's JSON export to keep a backup. Backups contain readable personal text, both saved background choices, and any older per-date media awaiting replacement. Importing replaces the destination history, so export that history first if you need it. The refreshed v1.1.0 build exports schema version 7 and imports versions 1 through 7 with a 32 MiB limit. v1.0.0 and the original v1.1.0 build cannot read schema-7 backups.
 
 History from the former web app is separate from desktop history. You can import a previously exported browser backup into the Windows app.
 

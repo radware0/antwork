@@ -43,15 +43,30 @@ const seed = async data => {
   await page.reload();
   await page.getByRole('heading', { name: 'Calendar', exact: true }).waitFor();
 };
-const card = () => page.getByRole('dialog', { name: /^(Day card|Customize day card)$/ });
+const emptyPreferences = { backgrounds: [null, null], selectedIndex: null };
+const card = () => page.getByRole('dialog', { name: /^(Day card|Day-card backgrounds)$/ });
 const openCard = async () => { await page.getByRole('button', { name: 'View day card', exact: true }).click(); await card().waitFor(); };
-const customize = async () => { await card().getByRole('button', { name: 'Customize card', exact: true }).click(); };
-const upload = async (name, mimeType, buffer) => {
-  await card().getByLabel('Background picture or video', { exact: true }).setInputFiles({ name, mimeType, buffer });
+const customize = async () => { await card().getByRole('button', { name: 'Day-card backgrounds', exact: true }).click(); };
+const upload = async (name, mimeType, buffer, slot = 1) => {
+  await card().getByLabel(`Background ${slot} picture or video`, { exact: true }).setInputFiles({ name, mimeType, buffer });
   await page.waitForFunction(() => !document.querySelector('.day-card-modal input[type=file]')?.disabled);
 };
-const save = async () => { await card().getByRole('button', { name: 'Save background', exact: true }).click(); await page.getByRole('dialog', { name: 'Day card', exact: true }).waitFor(); };
+const save = async () => { await card().getByRole('button', { name: 'Save backgrounds', exact: true }).click(); await page.getByRole('dialog', { name: 'Day card', exact: true }).waitFor(); };
 const close = async () => { await card().getByRole('button', { name: 'Close', exact: true }).click(); await card().waitFor({ state: 'detached' }); };
+const chooseDay = async (day, today) => {
+  await page.getByRole('button', { name: 'Today', exact: true }).click();
+  if (day.slice(0, 7) < today.slice(0, 7)) await page.getByRole('button', { name: 'Previous month', exact: true }).click();
+  if (day.slice(0, 7) > today.slice(0, 7)) await page.getByRole('button', { name: 'Next month', exact: true }).click();
+  await page.locator('.calendar-interactive button.day-cell').filter({ has: page.locator('.day-number', { hasText: new RegExp('^' + Number(day.slice(-2)) + '$') }) }).click();
+};
+const failMediaWrites = () => page.evaluate(() => {
+  const original = IDBObjectStore.prototype.put;
+  window.restoreDayWrite = () => { IDBObjectStore.prototype.put = original; };
+  IDBObjectStore.prototype.put = function(value, key) {
+    if (value.dayCardPreferences?.backgrounds.some(Boolean)) throw new DOMException('Synthetic write failure', 'QuotaExceededError');
+    return original.call(this, value, key);
+  };
+});
 
 try {
   await page.getByRole('heading', { name: 'Dashboard', exact: true }).waitFor();
@@ -60,16 +75,18 @@ try {
   const data = createInitialData(today);
   data.dailyRatings[today] = 'good';
   const midnight = await page.evaluate(() => new Date(new Date().setHours(0, 0, 0, 0)).getTime());
+  const yesterday = await page.evaluate(midnight => { const date = new Date(midnight - 1); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; }, midnight);
   data.sessions = [
     { id: 'midnight', intervals: [{ start: midnight - 30 * 60000, end: midnight + 45 * 60000 }], source: 'manual', questOccurrenceId: null, campaignId: null, result: null, note: 'Midnight work' },
     { id: 'dated', timing: 'duration', intervals: [], date: today, durationMinutes: 75, source: 'manual', questOccurrenceId: null, campaignId: null, result: 'rough', note: 'Dated work' },
   ];
   data.timer = { id: 'running', mode: 'stopwatch', durationMs: null, accumulatedMs: 0, intervals: [], runningSince: Date.now() - 3600000, questOccurrenceId: null, campaignId: null };
   await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('button', { name: 'Calendar', exact: true }).click();
-  const legacy = { ...data, schemaVersion: 5 }; delete legacy.dayCardBackgrounds;
+  const legacy = { ...data, schemaVersion: 5 }; delete legacy.dayCardBackgrounds; delete legacy.dayCardPreferences;
   await seed(legacy);
-  assert.equal((await readData()).schemaVersion, 6);
+  assert.equal((await readData()).schemaVersion, 7);
   assert.deepEqual((await readData()).dayCardBackgrounds, {});
+  assert.deepEqual((await readData()).dayCardPreferences, emptyPreferences);
   await openCard();
   assert.equal(await card().locator('.day-card-hours').innerText(), '2.0h');
   assert.equal(await card().locator('.day-card-quality').innerText(), 'Good');
@@ -82,26 +99,61 @@ try {
   }
   await openCard();
 
-  const png = Buffer.from(await page.evaluate(() => {
+  const makePng = async color => Buffer.from(await page.evaluate(color => {
     const canvas = document.createElement('canvas'); canvas.width = 600; canvas.height = 400;
-    const paint = canvas.getContext('2d'); paint.fillStyle = '#376585'; paint.fillRect(0, 0, 600, 400);
+    const paint = canvas.getContext('2d'); paint.fillStyle = color; paint.fillRect(0, 0, 600, 400);
     return canvas.toDataURL('image/png').split(',')[1];
-  }), 'base64');
+  }, color), 'base64');
+  const png = await makePng('#376585');
+  const secondPng = await makePng('#9c4565');
   await customize(); await upload('day.png', 'image/png', png);
   await card().getByRole('button', { name: 'Cancel', exact: true }).click();
   assert.equal(await card().locator('img.day-card-media').count(), 0);
   await customize(); await upload('day.png', 'image/png', png);
-  await page.evaluate(() => { const original = IDBObjectStore.prototype.put; window.restoreDayWrite = () => { IDBObjectStore.prototype.put = original; }; IDBObjectStore.prototype.put = function(value, key) { if (value.dayCardBackgrounds && Object.keys(value.dayCardBackgrounds).length) throw new DOMException('Synthetic write failure', 'QuotaExceededError'); return original.call(this, value, key); }; });
-  await card().getByRole('button', { name: 'Save background', exact: true }).click();
+  await failMediaWrites();
+  await card().getByRole('button', { name: 'Save backgrounds', exact: true }).click();
   await card().getByRole('alert').filter({ hasText: 'Synthetic write failure' }).waitFor();
   assert.equal(await card().locator('img.day-card-media').count(), 1);
   assert.deepEqual((await readData()).dayCardBackgrounds, {});
+  assert.deepEqual((await readData()).dayCardPreferences, emptyPreferences);
   await page.evaluate(() => window.restoreDayWrite()); await save();
-  assert.equal((await readData()).dayCardBackgrounds[today].kind, 'image');
-  const picture = (await readData()).dayCardBackgrounds[today];
-  await customize(); await card().getByRole('button', { name: 'Remove background', exact: true }).click(); await save();
-  assert.equal((await readData()).dayCardBackgrounds[today], undefined);
+  assert.equal((await readData()).dayCardPreferences.backgrounds[0].kind, 'image');
+  const picture = (await readData()).dayCardPreferences.backgrounds[0];
+  await customize(); await card().getByRole('button', { name: 'Remove background 1', exact: true }).click(); await save();
+  assert.deepEqual((await readData()).dayCardPreferences, emptyPreferences);
   await customize(); await upload('day.png', 'image/png', png); await save();
+
+  await customize(); await upload('second.png', 'image/png', secondPng, 2);
+  assert.equal(await card().locator('input[type=file]').count(), 2, 'exactly two reusable slots');
+  for (const theme of ['black', 'white']) {
+    await page.evaluate(theme => { document.documentElement.dataset.theme = theme; }, theme);
+    for (const [width, height] of [[1440, 900], [390, 844]]) {
+      if (app) await app.evaluate(({ BrowserWindow }, { width, height }) => BrowserWindow.getAllWindows()[0].setContentSize(width, height), { width, height });
+      else await page.setViewportSize({ width, height });
+      assert.ok(await card().evaluate(dialog => dialog.scrollWidth <= dialog.clientWidth + 1));
+      await page.screenshot({ path: path.join(evidence, `editor-${theme}-${width}.png`) });
+    }
+  }
+  await save();
+  const secondPicture = (await readData()).dayCardPreferences.backgrounds[1];
+  assert.notEqual(secondPicture.data, picture.data);
+  assert.equal((await readData()).dayCardPreferences.selectedIndex, 1);
+  await customize(); await card().getByRole('radio', { name: 'Use background 1', exact: true }).check();
+  await card().getByRole('button', { name: 'Cancel', exact: true }).click();
+  assert.equal(await card().locator('img.day-card-media').getAttribute('src'), secondPicture.data);
+  await customize(); await card().getByRole('radio', { name: 'Use background 1', exact: true }).check(); await save();
+  await close(); await chooseDay(yesterday, today); await openCard();
+  assert.equal(await card().locator('img.day-card-media').getAttribute('src'), picture.data, 'shared choice applies to another date');
+  await customize(); await card().getByRole('radio', { name: 'Use background 2', exact: true }).check(); await save();
+  await close(); await chooseDay(today, today); await openCard();
+  assert.equal(await card().locator('img.day-card-media').getAttribute('src'), secondPicture.data, 'switching from another date updates all cards');
+  await customize(); await card().getByRole('radio', { name: 'No background', exact: true }).check(); await save();
+  assert.equal(await card().locator('img.day-card-media').count(), 0);
+  assert.deepEqual((await readData()).dayCardPreferences.backgrounds, [picture, secondPicture]);
+  await customize(); await card().getByRole('radio', { name: 'Use background 1', exact: true }).check();
+  await card().getByRole('button', { name: 'Remove background 1', exact: true }).click(); await save();
+  assert.equal((await readData()).dayCardPreferences.selectedIndex, 1, 'removing the selected choice selects the remaining background');
+  assert.equal(await card().locator('img.day-card-media').getAttribute('src'), secondPicture.data);
 
   // Generate short clips with audio locally so silence is checked against a real soundtrack.
   const fixtureDir = path.resolve('.qa', 'day-card-fixtures'); await mkdir(fixtureDir, { recursive: true });
@@ -128,7 +180,7 @@ try {
   }
   for (const extension of ['mp4', 'webm']) {
     await customize(); await upload('clip.' + extension, 'video/' + extension, await readFile(path.join(fixtureDir, 'clip.' + extension))); await save();
-    assert.equal((await readData()).dayCardBackgrounds[today].kind, 'video');
+    assert.equal((await readData()).dayCardPreferences.backgrounds[0].kind, 'video');
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     await page.waitForFunction(() => { const video = document.querySelector('.day-card video'); return video && !video.paused && video.loop && video.muted && video.volume === 0 && video.currentTime > 0; });
     assert.equal(await card().getByRole('button', { name: /^(Play|Pause) video$/ }).count(), 0);
@@ -170,45 +222,98 @@ try {
   await upload('long.webm', 'video/webm', longClip); await card().getByRole('alert').filter({ hasText: '30 seconds' }).waitFor();
   await card().getByRole('button', { name: 'Cancel', exact: true }).click();
   await customize(); await upload('day.png', 'image/png', png); await page.keyboard.press('Escape'); await card().waitFor({ state: 'detached' });
-  assert.equal((await readData()).dayCardBackgrounds[today].kind, 'video');
+  assert.equal((await readData()).dayCardPreferences.backgrounds[0].kind, 'video');
   await openCard();
   await close();
+  const beforeTransition = await readData();
+  const oldMedia = { ...beforeTransition, schemaVersion: 6, dayCardBackgrounds: { [today]: picture, [yesterday]: beforeTransition.dayCardPreferences.backgrounds[0], '2026-01-01': secondPicture } };
+  delete oldMedia.dayCardPreferences;
+  await seed(oldMedia);
+  assert.equal((await readData()).schemaVersion, 7);
+  assert.deepEqual((await readData()).dayCardBackgrounds, oldMedia.dayCardBackgrounds);
+  assert.deepEqual((await readData()).dayCardPreferences, emptyPreferences);
+  await openCard();
+  assert.equal(await card().locator('img.day-card-media').getAttribute('src'), picture.data);
+  await customize();
+  assert.ok(await card().getByRole('button', { name: 'Save backgrounds', exact: true }).isDisabled());
+  await card().getByRole('checkbox', { name: 'Replace all older per-date backgrounds', exact: true }).check();
+  await card().getByRole('button', { name: 'Cancel', exact: true }).click();
+  assert.deepEqual((await readData()).dayCardBackgrounds, oldMedia.dayCardBackgrounds, 'cancel preserves all older media');
+  await customize();
+  assert.equal(await card().getByRole('checkbox', { name: 'Replace all older per-date backgrounds', exact: true }).isChecked(), false);
+  if (!app) {
+    const download = page.waitForEvent('download'); await card().getByRole('button', { name: 'Export JSON', exact: true }).click();
+    const exported = await download; const exportedData = JSON.parse(await readFile(await exported.path(), 'utf8'));
+    assert.deepEqual(exportedData.dayCardBackgrounds, oldMedia.dayCardBackgrounds, 'backup offer preserves every old background');
+    assert.deepEqual(exportedData.dayCardPreferences, emptyPreferences);
+  }
+  await upload('clip.webm', 'video/webm', await readFile(path.join(fixtureDir, 'clip.webm')), 2);
+  await card().getByRole('checkbox', { name: 'Replace all older per-date backgrounds', exact: true }).check();
+  await failMediaWrites();
+  await card().getByRole('button', { name: 'Save backgrounds', exact: true }).click();
+  await card().getByRole('alert').filter({ hasText: 'Synthetic write failure' }).waitFor();
+  assert.deepEqual((await readData()).dayCardBackgrounds, oldMedia.dayCardBackgrounds, 'failed replacement retains every old background');
+  await page.evaluate(() => window.restoreDayWrite()); await save();
+  assert.deepEqual((await readData()).dayCardBackgrounds, {});
+  assert.equal((await readData()).dayCardPreferences.selectedIndex, 1);
+  assert.deepEqual((await readData()).dayCardPreferences.backgrounds[0], picture, 'current old background can be reused without uploading');
+  await close(); await chooseDay(yesterday, today); await openCard();
+  await page.waitForFunction(() => !document.querySelector('.day-card video').paused);
+  await close(); await chooseDay(today, today);
+
   const stored = await readData();
-  const yesterday = await page.evaluate(midnight => { const date = new Date(midnight - 1); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; }, midnight);
-  stored.dayCardBackgrounds[yesterday] = picture;
   const backup = JSON.stringify(stored, null, 2);
-  await seed({ ...stored, dayCardBackgrounds: {} });
+  await seed({ ...stored, dayCardPreferences: emptyPreferences });
   await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('button', { name: 'Profile', exact: true }).click();
   for (const background of [
     { kind: 'video', data: 'data:video/webm;base64,GkXfo4EAAAE=', durationSeconds: 1 },
     { kind: 'image', data: 'data:image/webp;base64,UklGRgAAAABXRUJQVlA4' },
   ]) {
-    await page.getByText('Import JSON', { exact: true }).locator('input').setInputFiles({ name: 'invalid.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ ...stored, dayCardBackgrounds: { [today]: background } })) });
-    await page.getByRole('status').filter({ hasText: 'could not be opened' }).waitFor();
-    assert.equal(await page.getByRole('dialog', { name: 'Replace local history', exact: true }).count(), 0);
-    assert.deepEqual((await readData()).dayCardBackgrounds, {});
+    for (const legacy of [false, true]) {
+      const invalid = legacy ? { ...stored, schemaVersion: 6, dayCardBackgrounds: { [today]: background } }
+        : { ...stored, dayCardPreferences: { backgrounds: [background, stored.dayCardPreferences.backgrounds[1]], selectedIndex: 1 } };
+      if (legacy) delete invalid.dayCardPreferences;
+      await page.getByText('Import JSON', { exact: true }).locator('input').setInputFiles({ name: 'invalid.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(invalid)) });
+      await page.getByRole('status').filter({ hasText: 'could not be opened' }).waitFor();
+      assert.equal(await page.getByRole('dialog', { name: 'Replace local history', exact: true }).count(), 0);
+      assert.deepEqual((await readData()).dayCardPreferences, emptyPreferences, 'inactive and legacy corrupt media cannot replace history');
+    }
   }
   await page.getByText('Import JSON', { exact: true }).locator('input').setInputFiles({ name: 'backup.json', mimeType: 'application/json', buffer: Buffer.from(backup) });
   await page.getByRole('dialog', { name: 'Replace local history', exact: true }).getByRole('button', { name: 'Replace local history', exact: true }).click();
   await page.getByRole('dialog', { name: 'Replace local history', exact: true }).waitFor({ state: 'detached' });
-  assert.deepEqual((await readData()).dayCardBackgrounds, stored.dayCardBackgrounds);
+  assert.deepEqual((await readData()).dayCardPreferences, stored.dayCardPreferences);
+  assert.deepEqual((await readData()).sessions, stored.sessions);
+  assert.deepEqual((await readData()).dailyRatings, stored.dailyRatings);
   if (!app) {
     const download = page.waitForEvent('download'); await page.getByRole('button', { name: 'Export JSON', exact: true }).click();
     const exported = await download; const exportedData = JSON.parse(await readFile(await exported.path(), 'utf8'));
-    assert.deepEqual(exportedData.dayCardBackgrounds, stored.dayCardBackgrounds);
+    assert.equal(exportedData.schemaVersion, 7);
+    assert.deepEqual(exportedData.dayCardPreferences, stored.dayCardPreferences);
   }
   await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('button', { name: 'Calendar', exact: true }).click();
-  await openCard(); await close();
-  const nearLimit = { ...stored, dayCardBackgrounds: {}, journals: [{ date: today, text: '', updatedAt: 1 }] };
+  await openCard(); await page.waitForFunction(() => !document.querySelector('.day-card video').paused); await close();
+  await page.reload(); await page.getByRole('heading', { name: 'Calendar', exact: true }).waitFor();
+  await openCard(); await page.waitForFunction(() => !document.querySelector('.day-card video').paused); await close();
+  assert.deepEqual((await readData()).dayCardPreferences, stored.dayCardPreferences, 'shared choices survive restart');
+  const nearLimit = { ...stored, dayCardPreferences: emptyPreferences, journals: [{ date: today, text: '', updatedAt: 1 }] };
   const overhead = Buffer.byteLength(JSON.stringify(nearLimit, null, 2)); nearLimit.journals[0].text = 'a'.repeat(32 * 1024 * 1024 - overhead - 20);
   await seed(nearLimit); await openCard(); await customize(); await upload('day.png', 'image/png', png);
-  await card().getByRole('button', { name: 'Save background', exact: true }).click();
+  await card().getByRole('button', { name: 'Save backgrounds', exact: true }).click();
   await card().getByRole('alert').filter({ hasText: '32 MiB' }).waitFor();
-  assert.deepEqual((await readData()).dayCardBackgrounds, {});
+  assert.deepEqual((await readData()).dayCardPreferences, emptyPreferences);
   assert.equal(await card().locator('img.day-card-media').count(), 1);
   await card().getByRole('button', { name: 'Cancel', exact: true }).click(); await close();
   await seed({ ...stored, sessions: [], timer: null });
   assert.equal(await page.getByRole('button', { name: 'View day card', exact: true }).count(), 0);
+  assert.equal(await page.getByRole('button', { name: 'Remove day background', exact: true }).count(), 0, 'shared media is independent of work dates');
+  await page.getByRole('button', { name: 'Day-card backgrounds', exact: true }).click();
+  assert.equal(await card().locator('.day-card-hours').count(), 0, 'global editor does not create an empty worked-day card');
+  await card().getByRole('button', { name: 'Remove background 1', exact: true }).click();
+  await card().getByRole('button', { name: 'Remove background 2', exact: true }).click();
+  await card().getByRole('button', { name: 'Save backgrounds', exact: true }).click(); await card().waitFor({ state: 'detached' });
+  assert.deepEqual((await readData()).dayCardPreferences, emptyPreferences, 'backgrounds remain removable without any saved work');
+  await seed({ ...stored, sessions: [], timer: null, dayCardPreferences: emptyPreferences, dayCardBackgrounds: { [today]: picture } });
   await page.getByRole('button', { name: 'Remove day background', exact: true }).click();
   await page.waitForFunction(() => !document.querySelector('.day-summary button'));
   assert.equal((await readData()).dayCardBackgrounds[today], undefined);
@@ -218,7 +323,7 @@ try {
   await page.getByRole('button', { name: /future day$/ }).filter({ has: page.locator('.day-number', { hasText: new RegExp('^' + Number(tomorrow.slice(-2)) + '$') }) }).click();
   assert.equal(await page.getByRole('button', { name: 'View day card', exact: true }).count(), 0);
   assert.deepEqual(errors, []);
-  await writeFile(path.join(evidence, 'result.json'), JSON.stringify({ passed: true, environment: app ? 'packaged Electron' : 'Chromium', checks: ['saved hours', 'v5 migration', 'image drafts', 'write rollback', 'MP4/WebM silent loops', 'visibility', 'reduced motion', 'responsive themes', 'invalid uploads', 'backup restore', 'backup limit', 'orphan cleanup'], screenshots: evidence }, null, 2));
+  await writeFile(path.join(evidence, 'result.json'), JSON.stringify({ passed: true, environment: app ? 'packaged Electron' : 'Chromium', checks: ['saved hours', 'v5/v6 migration', 'two shared choices', 'cross-date selection', 'no background', 'removal fallback', 'image drafts', 'write rollback', 'confirmed legacy replacement', 'legacy backup export', 'MP4/WebM silent loops', 'visibility', 'reduced motion', 'responsive cards and editor', 'invalid uploads and imports', 'backup restore', 'restart', 'backup limit', 'cleanup without work', 'legacy orphan cleanup'], screenshots: evidence }, null, 2));
   console.log('Day-card checks passed. Evidence: ' + evidence);
 } finally {
   if (app) await app.close();

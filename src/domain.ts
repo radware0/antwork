@@ -106,13 +106,14 @@ export function generateOccurrences(
 
 export function createInitialData(setupDate: DateKey): AppData {
   return {
-    schemaVersion: 6,
+    schemaVersion: 7,
     setupDate,
     setupComplete: true,
     weeklyTargets: [0, 4, 4, 4, 4, 4, 0],
     dailyTargets: {},
     dailyRatings: {},
     dayCardBackgrounds: {},
+    dayCardPreferences: { backgrounds: [null, null], selectedIndex: null },
     calendarMode: 'quality',
     theme: 'black',
     preferences: { interfaceSounds: true, timerAlarm: true },

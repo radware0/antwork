@@ -10,6 +10,8 @@ Polish the five-page local flow, observe usability with consent, and fix confusi
 
 The v1.1.0 work adds a daily achievement card opened from Calendar for dates with saved work. It shows saved hours and the existing Good, Steady, Rough, or Unrated day quality, with one optional picture or silent looping video background. Media travels with JSON backups under explicit size limits. Larger media collections remain outside this version's 32 MiB backup boundary.
 
+The refreshed v1.1.0 release replaces repeated per-date uploads with two shared background choices and one selection for all cards. Older media remains intact until the user confirms replacement, with backup export offered first. Profitability and payments remain deferred.
+
 ## Desktop platforms
 
 The first desktop build targets Windows 11 x64 for personal use, then trusted testers. Verify Windows 10 22H2 compatibility before claiming it. Trusted distribution needs installer, upgrade, accessibility, scaling, and signing checks on clean Windows machines. macOS and Linux are deferred until the Windows workflow is settled. Accounts remain outside this desktop release.

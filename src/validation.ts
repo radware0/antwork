@@ -79,6 +79,13 @@ const dayCardBackground = z.discriminatedUnion('kind', [
     durationSeconds: z.number().finite().positive().max(MAX_DAY_VIDEO_SECONDS) }),
 ]);
 const v6Schema = v5Schema.extend({ schemaVersion: z.literal(6), dayCardBackgrounds: z.record(day, dayCardBackground).default({}) });
+const dayCardPreferences = z.object({
+  backgrounds: z.tuple([dayCardBackground.nullable(), dayCardBackground.nullable()]),
+  selectedIndex: z.union([z.literal(0), z.literal(1)]).nullable(),
+}).refine(value => value.selectedIndex === null || value.backgrounds[value.selectedIndex] !== null, 'Choose an available background.');
+const v7Schema = v6Schema.extend({ schemaVersion: z.literal(7), dayCardPreferences })
+  .refine(value => Object.keys(value.dayCardBackgrounds).length === 0 || value.dayCardPreferences.backgrounds.every(background => background === null),
+    'Replace older per-date backgrounds before saving shared backgrounds.');
 
 const emptyProfile = { name: '', bio: '', avatar: null, banner: null, links: [] } as const;
 
@@ -97,7 +104,7 @@ export function parseBackup(value: unknown): AppData {
   const version = value && typeof value === 'object' ? (value as { schemaVersion?: unknown }).schemaVersion : null;
   const result = version === 1 ? legacySchema.safeParse(value)
     : version === 2 ? v2Schema.safeParse(value)
-      : version === 3 ? v3Schema.safeParse(value) : version === 4 ? v4Schema.safeParse(value) : version === 5 ? v5Schema.safeParse(value) : version === 6 ? v6Schema.safeParse(value) : null;
+      : version === 3 ? v3Schema.safeParse(value) : version === 4 ? v4Schema.safeParse(value) : version === 5 ? v5Schema.safeParse(value) : version === 6 ? v6Schema.safeParse(value) : version === 7 ? v7Schema.safeParse(value) : null;
   if (!result) throw new Error('Invalid backup: unsupported schema version.');
   if (!result.success) invalidBackup(result);
 
@@ -116,11 +123,12 @@ export function parseBackup(value: unknown): AppData {
   } : null;
   const migratedOnboarding = Number(version) >= 5 ? raw.onboarding : { usernamePromptCompleted: Boolean(profile.username) };
   const data = {
-    ...raw, schemaVersion: 6, setupComplete: true, theme: raw.theme === 'white' ? 'white' : 'black',
+    ...raw, schemaVersion: 7, setupComplete: true, theme: raw.theme === 'white' ? 'white' : 'black',
     preferences: raw.preferences ?? { interfaceSounds: false, timerAlarm: false },
     timerPanel: raw.timerPanel ?? defaultTimerPanel,
     dailyRatings: raw.dailyRatings ?? {},
     dayCardBackgrounds: raw.dayCardBackgrounds ?? {},
+    dayCardPreferences: raw.dayCardPreferences ?? { backgrounds: [null, null], selectedIndex: null },
     calendarMode: raw.calendarMode ?? 'quality',
     onboarding: { ...migratedOnboarding, usernamePromptCompleted: Boolean(migratedOnboarding?.usernamePromptCompleted || profile.username) },
     profile: { ...profile, username: profile.username ?? '' }, sessions, timer: timerData,

@@ -1,8 +1,20 @@
 import { normalizeTimerBackground } from './profileMedia.ts';
-import type { DayCardBackground } from './types.ts';
+import type { AppData, DateKey, DayCardBackground, DayCardPreferences } from './types.ts';
 
 export const MAX_DAY_VIDEO_BYTES = 5 * 1024 * 1024;
 export const MAX_DAY_VIDEO_SECONDS = 30;
+
+export function dayCardBackgroundForDate(data: AppData, day: DateKey): DayCardBackground | null {
+  const { backgrounds, selectedIndex } = data.dayCardPreferences;
+  return selectedIndex === null ? data.dayCardBackgrounds[day] ?? null : backgrounds[selectedIndex];
+}
+
+export function removeDayCardBackground(preferences: DayCardPreferences, index: 0 | 1): DayCardPreferences {
+  const backgrounds: DayCardPreferences['backgrounds'] = [...preferences.backgrounds];
+  backgrounds[index] = null;
+  const other = index === 0 ? 1 : 0;
+  return { backgrounds, selectedIndex: preferences.selectedIndex === index ? (backgrounds[other] ? other : null) : preferences.selectedIndex };
+}
 
 export function assertDayVideoFile(file: Pick<File, 'type' | 'size'>) {
   if (!['video/mp4', 'video/webm'].includes(file.type)) throw new Error('Choose an MP4 or WebM video.');
@@ -51,8 +63,9 @@ async function inspectVideo(blob: Blob): Promise<number> {
   }
 }
 
-export async function validateDayCardPlayback(backgrounds: Record<string, DayCardBackground>): Promise<void> {
-  for (const background of Object.values(backgrounds)) {
+export async function validateDayCardPlayback(data: AppData): Promise<void> {
+  for (const background of [...Object.values(data.dayCardBackgrounds), ...data.dayCardPreferences.backgrounds]) {
+    if (!background) continue;
     if (background.kind === 'video') await inspectVideo(dayVideoBlob(background.data));
     else {
       const encoded = background.data.split(',')[1];

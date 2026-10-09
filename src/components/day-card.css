@@ -14,4 +14,14 @@
 .day-card-quality.quality-rough { color: #e86161; }
 .day-card-playback-error { position: relative; margin: 16px 32px 0; font-size: 12px; text-shadow: 0 2px 6px #000; }
 .day-card-modal input[type=file] { max-width: 100%; }
+.day-card-backgrounds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+.day-card-slot { min-width: 0; padding: 12px; border: 1px solid rgb(255 255 255 / .25); border-radius: 8px; background: rgb(0 0 0 / .45); }
+.day-card-slot legend { padding: 0 4px; font-size: 13px; }
+.day-card-slot .field { margin: 12px 0; color: #ccc; }
+.day-card-modal :is(.day-card-slot, .day-card-legacy) .button { color: #fff; background: rgb(0 0 0 / .35); border-color: rgb(255 255 255 / .3); }
+.day-card-choice { display: flex; align-items: center; gap: 8px; margin: 12px 0; font-size: 13px; }
+.day-card-modal .day-card-choice input[type] { flex-shrink: 0; width: 16px; height: 16px; padding: 0; accent-color: var(--accent); }
+.day-card-choice input:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.day-card-legacy { margin: 16px 0; padding: 12px; border: 1px solid rgb(255 255 255 / .25); border-radius: 8px; background: rgb(0 0 0 / .45); font-size: 13px; }
+@media (max-width: 520px) { .day-card-backgrounds { grid-template-columns: 1fr; } }
 @media (max-width: 480px) { .day-card-content { padding: 24px; } }

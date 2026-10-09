@@ -33,11 +33,18 @@ export function assertBackupImportSize(bytes: number): void {
 
 export function serializeBackup(data: AppData): string { return JSON.stringify(data, null, 2); }
 
+export function downloadBackup(data: AppData, now = Date.now()): void {
+  const url = URL.createObjectURL(new Blob([serializeBackup(data)], { type: 'application/json' }));
+  const anchor = document.createElement('a');
+  anchor.href = url; anchor.download = 'antwork-' + dateKey(now) + '.json'; anchor.click();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 export function assertBackupWriteSize(current: AppData, next: AppData): void {
   // ponytail: bounded media stays in one document; use a media store if larger collections are needed.
   const bytes = new TextEncoder().encode(serializeBackup(next)).byteLength;
   if (bytes > MAX_BACKUP_IMPORT_BYTES && bytes > new TextEncoder().encode(serializeBackup(current)).byteLength) {
-    throw new Error('This change would exceed the 32 MiB backup limit. Remove a day background to free space. Your saved history is unchanged.');
+    throw new Error('This change would exceed the 32 MiB backup limit. Remove a day-card background to free space. Your saved history is unchanged.');
   }
 }
 

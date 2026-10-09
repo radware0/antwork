@@ -18,6 +18,6 @@ The journal holds one private note per day. Saved text is readable on Dashboard 
 
 ## Keep your own copy
 
-For a date with saved work, **View day card** in Calendar opens a daily achievement: saved hours and your whole-day rating. Customize it with one picture or silent looping video. Background changes use Save and Cancel like the timer; cards exclude unfinished timer time.
+For a date with saved work, **View day card** in Calendar opens a daily achievement: saved hours and your whole-day rating. **Day-card backgrounds** saves up to two pictures or silent looping videos once; one selected choice applies to all day cards. Background changes use Save and Cancel like the timer; cards exclude unfinished timer time. The editor is also available from Calendar without saved work. Older per-date backgrounds are preserved until you explicitly confirm replacement, with a backup export offered first.
 
 Profile's **Local backup** exports the complete record as JSON, including day-card pictures and videos. Import validates the file and asks before replacing local history. Backups include notes, profile images, and other personal content and are not encrypted. Store them accordingly. See [Data and privacy](/docs/privacy/).
